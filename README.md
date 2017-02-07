@@ -1,1 +1,1 @@
-# AI-Genetic-Algorithms-on-Risk-
+# AI-Genetic-Algorithms-on-Lux-
