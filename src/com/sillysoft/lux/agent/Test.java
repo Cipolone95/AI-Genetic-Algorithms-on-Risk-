@@ -5,7 +5,8 @@ import com.sillysoft.lux.util.*;
 import java.util.Random;
 import java.util.List;
 import java.util.*;
-
+import org.jgap.Chromosome;
+import java.lang.Comparable;
 //
 //  Angry.java
 //  Lux
