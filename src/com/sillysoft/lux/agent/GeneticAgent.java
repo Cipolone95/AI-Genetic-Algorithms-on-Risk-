@@ -12,7 +12,7 @@ import com.sillysoft.lux.util.*;
 
 import java.util.*;
 
-public class BlankAgent implements LuxAgent
+public class GeneticAgent implements LuxAgent
 {
 // This agent's ownerCode:
 protected int ID;
@@ -23,8 +23,7 @@ protected Country[] countries;
 
 // It might be useful to have a random number generator
 protected Random rand;
-
-public BlankAgent()
+public GeneticAgent()
 	{
 	rand = new Random();
 	}
