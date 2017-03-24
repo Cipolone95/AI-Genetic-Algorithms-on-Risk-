@@ -1,0 +1,148 @@
+/*
+ * Java Genetic Algorithm Library (@__identifier__@).
+ * Copyright (c) @__year__@ Franz Wilhelmstötter
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Author:
+ *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
+ */
+
+
+import org.jenetics.gradle.PropertiesLoader
+import org.jenetics.gradle.Version
+import org.jenetics.gradle.plugin.SetupPlugin
+import org.jenetics.gradle.task.FixJavadocCodeBlockTask
+import org.jenetics.gradle.task.TrimLineFeedTask
+
+import java.text.SimpleDateFormat
+
+/**
+ * @author <a href="mailto:franz.wilhelmstoetter@gmx.at">Franz Wilhelmstötter</a>
+ * @since 1.2
+ * @version 1.5
+ */
+new PropertiesLoader(ext).load(file('project.properties'))
+new PropertiesLoader(ext).load(file('include.properties'))
+rootProject.version = Version.parse(jenetics.version)
+
+apply plugin: 'signing'
+apply plugin: 'packaging'
+
+ext {
+	javaVersion = '1.8'
+
+	now = Calendar.getInstance()
+	year = now.get(Calendar.YEAR);
+	copyrightYear = "2007-${year}".toString()
+	identifier = "${rootProject.name}-${version}".toString()
+	manualDate = (new SimpleDateFormat("yyyy/MM/dd")).format(now.time)
+	manualIdentifier = "${version}—${manualDate}".toString()
+	dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+}
+
+allprojects {
+	group = 'io.jenetics'
+	version = jenetics.version
+
+	repositories {
+		flatDir(dir: "${rootDir}/buildSrc/lib")
+		mavenCentral()
+	}
+}
+
+subprojects { Project prj ->
+	prj.plugins.apply(SetupPlugin.class)
+}
+
+allprojects { Project prj ->
+	if (prj.plugins.hasPlugin('java')) {
+		sourceCompatibility = javaVersion
+		targetCompatibility = javaVersion
+	}
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '3.1'
+}
+
+task trimLineFeed(type: TrimLineFeedTask) {
+	directory = project.rootDir
+	outputs.upToDateWhen {
+		false
+	}
+}
+
+task fixCodeBlock(type: FixJavadocCodeBlockTask) {
+	directory = project.rootDir
+	outputs.upToDateWhen {
+		false
+	}
+}
+
+task alljavadoc(type: Javadoc) {
+	options.encoding = 'UTF-8'
+	def jeneticsProjects = subprojects.findAll { project ->
+		project.name.startsWith('jeneti') &&
+		project.name != 'jenetics.doc'
+	}
+	configure(jeneticsProjects) {
+		apply plugin: 'java'
+	}
+
+	source jeneticsProjects.collect { p ->
+		p.sourceSets.main.allJava
+	}
+	destinationDir = file("${buildDir}/alljavadoc")
+
+	// Might need a classpath
+	classpath = files(jeneticsProjects.collect { project ->
+		project.sourceSets.main.compileClasspath
+	})
+}
+
+// Create a zip file from the export directory.
+task zip(type: Zip) {
+	from("build/package/${identifier}") {
+		into identifier
+	}
+
+	baseName = rootProject.name
+	version = jenetics.version
+
+	doLast {
+		def zip = file("${identifier}.zip")
+		zip.renameTo(new File('build/package', zip.getName()))
+	}
+}
+
+/*
+task sha256(type: ChecksumTask) {
+	algorithm = 'SHA-256'
+	inputFile = file("build/distributions/${identifier}.zip")
+}
+
+task md5(type: ChecksumTask) {
+	inputFile = file("build/distributions/${identifier}.zip")
+}
+
+zip.finalizedBy([sha256, md5])
+
+signing {
+	//gpg --armor --detach-sign jenetics-1.4.0.zip
+	//gpg --verify jenetics-1.4.0.zip.asc jenetics-1.4.0.zip
+	sign zip
+}
+*/
+
+
