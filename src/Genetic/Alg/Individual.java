@@ -5,6 +5,8 @@ package Genetic.Alg;
  * This class is used to make an individual to add to the population
  * for a genetic algorithm
  *
+ * *Code is based off of code from the following website
+ * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
 public class Individual {
 

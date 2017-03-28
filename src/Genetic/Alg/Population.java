@@ -5,6 +5,9 @@ package Genetic.Alg;
  *of randomized individuals. This is the starting point of our
  *"species" so to say.
  *After it is initialized it will serve as the population over time as well.
+ *
+ * *Code is based off of code from the following website
+ * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
 public class Population {
 

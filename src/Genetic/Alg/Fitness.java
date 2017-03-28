@@ -3,6 +3,9 @@ package Genetic.Alg;
 /**
  * Calculates the fitness of a specified individual.
  * This will have to be changed to reflect fitness from risk.
+ * 
+ *  *Code is based off of code from the following website
+ * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
 public class Fitness {
     static byte[] solution = new byte[64];
