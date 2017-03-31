@@ -4,6 +4,8 @@ package Genetic.Alg;
  * Calculates the fitness of a specified individual.
  * This will have to be changed to reflect fitness from risk.
  * 
+ * BASED OFF NUMBER OF TURNS SURVIVED (WIN IS VERY GOOD) AND LEVEL OF THE BOTS IT IS FACING IE: EASY NOT AS WORTH MUCH AS HARD.
+ * 
  *  *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
