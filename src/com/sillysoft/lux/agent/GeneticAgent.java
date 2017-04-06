@@ -340,8 +340,9 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	}
 
 	/*
-	 * Attack based on attack phases first gene Gene uses (non-Javadoc)
-	 * 
+	 * Attack based on attack phases first gene Gene uses only up to 0x07
+	 * so 0000 0111 over 7 is unused. 
+	 * (non-Javadoc)
 	 * @see com.sillysoft.lux.agent.Pixie#attackPhase()
 	 */
 	public void attackPhase() {
@@ -483,11 +484,135 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	}
 
 	/*
-	 * DEPLOY OR ATTACK PHASE PART 2!!!! (non-Javadoc)
-	 * 
+	 * 2nd part of the attack phase. Uses second gene from the attack phase.
+	 * This method deals with moving in armies after taking over a territory.
+	 * (non-Javadoc)
 	 * @see com.sillysoft.lux.agent.Pixie#moveArmiesIn(int, int)
 	 */
 	public int moveArmiesIn(int cca, int ccd) {
+		byte reOccupy = (geneticAgent.getPhase("attack"))[1];
+		
+		if(reOccupy == 0x00){
+			//moves armies into countries with more enemies.
+			int Aenemies = countries[cca].getNumberEnemyNeighbors();
+			int Denemies = countries[ccd].getNumberEnemyNeighbors();
+
+			// If the attacking country had more enemies, then we leave all possible 
+			// armies in the country they attacked from (thus we move in 0):
+			if ( Aenemies > Denemies )
+				return 0;
+
+			// Otherwise the defending country has more neighboring enemies, move in everyone:
+			return countries[cca].getArmies()-1;
+		}
+		//divides armies evenly between the two countries
+		else if(reOccupy == 0x01){
+			int totalArmies = countries[cca].getArmies();
+
+			return ( (totalArmies+1) / 2);
+		}
+		//looks to place armies next to weak countries
+		else if(reOccupy == 0x02){
+			Country attackWeak = countries[cca].getWeakestEnemyNeighbor();
+			Country defendWeak = countries[ccd].getWeakestEnemyNeighbor();
+
+			if (attackWeak == null)
+				return 1000000;
+			if (defendWeak == null)
+				return 0;
+
+			if (attackWeak.getArmies() < defendWeak.getArmies())
+				return 0;
+
+			return 1000000;
+		}
+		//cluster armies
+		else if(reOccupy == 0x03){
+			int test = obviousMoveArmiesInTest(cca, ccd);
+			if (test != -1)
+				return test;
+
+			test = memoryMoveArmiesInTest(cca, ccd);
+			if (test != -1)
+				return test;
+
+			Country aweakest = countries[cca].getWeakestEnemyNeighborInContinent(goalCont);
+			Country dweakest = countries[ccd].getWeakestEnemyNeighborInContinent(goalCont);
+
+			if (dweakest == null || (aweakest != null && aweakest.getArmies() < dweakest.getArmies()))
+				// attacking country has a weaker neighbor. leave armies there
+				return 0;
+
+			return 1000000;
+		}
+		//tries to move armies into a more advantages position
+		else if(reOccupy == 0x04){
+			// test if they border any enemies at all:
+			int attackerEnemies = countries[cca].getNumberEnemyNeighbors();
+			int defenderEnemies = countries[ccd].getNumberEnemyNeighbors();
+
+			if (attackerEnemies > defenderEnemies)
+				return 0;
+			else if (defenderEnemies > attackerEnemies)
+				return 1000000;
+			else if (attackerEnemies > 0)	// then they are tied at above 0
+				return countries[cca].getArmies()/2;
+
+
+			// move our armies into continents that we want.
+			if (ourConts[ countries[cca].getContinent() ] && ourConts[ countries[ccd].getContinent() ])
+				{	// we want both
+				return countries[cca].getArmies()/2;
+				}
+			else if (ourConts[ countries[cca].getContinent() ] )
+				{
+				return 0;	// leave them in attacker
+				}
+			else if ( ourConts[ countries[ccd].getContinent() ])
+				{
+				return 1000000;	// send to defender
+				}
+
+			// so now we want none of them
+			// see if either of them border something we want
+			int attackerEnemiesWanted = 0, defenderEnemiesWanted = 0;
+			CountryIterator e = new NeighborIterator(countries[cca]);
+			while (e.hasNext())
+				{
+				Country test = e.next();
+				if (test.getOwner() != ID && ourConts[ test.getContinent() ])
+					{
+					attackerEnemiesWanted++;
+					}
+				}
+			e = new NeighborIterator(countries[ccd]);
+			while (e.hasNext())
+				{
+				Country test = e.next();
+				if (test.getOwner() != ID && ourConts[ test.getContinent() ])
+					{
+					defenderEnemiesWanted++;
+					}
+				}
+
+			if (attackerEnemiesWanted > defenderEnemiesWanted)
+				return 0;
+			else if (defenderEnemiesWanted > attackerEnemiesWanted)
+				return 1000000;
+			else if (attackerEnemiesWanted > 0)	// then they are tied at above 0
+				return countries[cca].getArmies()/2;
+
+			// So if we get here then they both border zero countries that we want.
+
+			// Now if we are here then neither have any enemies. 
+			// we won't be able to use them to attack this turn
+
+			// now just move in xxagentxx
+			debug("Pixie moveArmiesIn not fully imped");
+			return countries[cca].getArmies()/2;
+		}
+		
+		//this should never be reached
 		return 0;
 	}
 
