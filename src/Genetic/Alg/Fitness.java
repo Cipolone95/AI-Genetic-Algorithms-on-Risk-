@@ -1,5 +1,7 @@
 package Genetic.Alg;
 
+import Genetic.Alg.Individual;
+
 /**
  * Calculates the fitness of a specified individual.
  * This will have to be changed to reflect fitness from risk.
