@@ -1,5 +1,7 @@
 package Genetic.Alg;
 
+import Genetic.Alg.Individual;
+
 /**
  *The population class initializes new sized population based off
  *of randomized individuals. This is the starting point of our

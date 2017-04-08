@@ -1,13 +1,16 @@
 package com.sillysoft.lux.agent;
 
+import Genetic.Alg.Individual;
 import com.sillysoft.lux.*;
 import com.sillysoft.lux.util.*;
-import java.util.*;
+import java.util.Date;
 
-import Genetic.Alg.*;
+import java.util.Random;
+import java.util.List;
 
-public class GeneticAgent extends Pixie implements LuxAgent {
-	// This agent's ownerCode:
+public class GeneticAgent extends Pixie implements LuxAgent 
+{
+// This agent's ownerCode:
 	protected int ID;
 	// used by some genes as indication to expand.
 	protected int expando;
@@ -17,20 +20,25 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	protected Country[] countries;
 	// It might be useful to have a random number generator
 	protected Random rand;
+        protected AgentLogger logger;
 
 	// This will contain the genes of our individual genetic agent.
-	private Individual geneticAgent = new Individual();
+	private Individual geneticAgent;
 	private boolean[] ourConts; // whether we will spend efforts taking/holding
 								// each continent
 
 	public GeneticAgent() {
 		rand = new Random();
+                
 	}
 
 	// Save references
 	public void setPrefs(int newID, Board theboard) {
 		ID = newID; // this is how we distinguish what countries we own
-
+                String addToFile = Integer.toString(ID) + new Date().getTime();
+                this.logger = new AgentLogger(addToFile);
+                this.geneticAgent = new Individual();
+                logger.log("Genetic Agent create at" + new Date().getTime());
 		board = theboard;
 		countries = board.getCountries();
 	}
@@ -82,10 +90,56 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * @see com.sillysoft.lux.agent.Pixie#placeArmies(int)
 	 */
 	public void placeArmies(int numberOfArmies) {
+                logger.log("Place Armies");
+                byte[] deployGene = new byte[1];
+                //holds the terrioty advantage score
+                int territoryScore = 0;
+                int armyVantageScore = 0;
+                //holds the number of enemy neighbors next to the country "us"
+                int numEnemyNeighbors = 0;
+                int numEnemyArmies = 0;
+                int myArmies = 0;
+                CountryIterator own = new PlayerIterator(ID, countries);
+			while (own.hasNext()) {
+				Country us = own.next();
+                                //get my armies on this country "us'
+                                myArmies = us.getArmies();
+                                // Get an array of counries touching "us"
+                                Country [] nextToMe = us.getAdjoiningList();
+                                // Loop through the countries next to me. Hoppfully starting at index zero
+                                for (int i = 0; i <= nextToMe.length; i++) {
+                                    // Make sure that the nextToMe country isnt mine
+                                    if (nextToMe[i].getOwner() != this.ID) {
+                                        // If it isn't mine get the armies that from country[i]
+                                        numEnemyArmies += BoardHelper.getPlayerArmies(nextToMe[i].getOwner(), nextToMe);
+                                    }
+                                }
+                                if (numEnemyArmies != 0) {
+                                    // if myArmies/numEnemyNeighbors is less than 1 that means my enemies have more armies 
+                                    // on adjoining countries and my fitness is bad
+                                    // if myArmies/numEnemyNeighbors is great than 1 that means my enemies have less armies 
+                                    // on adjoining countries and my fitness is bad
+                                armyVantageScore = myArmies/numEnemyNeighbors;
+                                }
+                                else {
+                                    armyVantageScore = 1;
+                                }
+                                
+				numEnemyNeighbors = us.getNumberEnemyNeighbors();
+                                // territoryScore will be less then one 
+                                if (numEnemyNeighbors != 0) {
+                                territoryScore = 1/numEnemyNeighbors;
+                                }
+                                else {
+                                    territoryScore = 0;
+                                }
+				// If it's the best so far store it
+			}
+                
 		// placeInitialArmies is based of the first gene in the byte array
 		// for the deploy phase.
 		byte deployArmies = (geneticAgent.getPhase("deploy"))[0];
-
+                //byte deployArmies = 0X01;
 		// Armies where they can attack the most countries.
 		if (deployArmies == 0x01) {
 			int mostEnemies = -1;
@@ -95,9 +149,9 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 
 			// Use a PlayerIterator to cycle through all the countries that we
 			// own.
-			CountryIterator own = new PlayerIterator(ID, countries);
-			while (own.hasNext()) {
-				Country us = own.next();
+			CountryIterator own2 = new PlayerIterator(ID, countries);
+			while (own2.hasNext()) {
+				Country us = own2.next();
 				subTotalEnemies = us.getNumberEnemyNeighbors();
 
 				// If it's the best so far store it
@@ -346,7 +400,10 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * @see com.sillysoft.lux.agent.Pixie#attackPhase()
 	 */
 	public void attackPhase() {
+                                   
 		byte attack = (geneticAgent.getPhase("attack"))[0];
+                //byte attack = 0x01;
+
 
 		// attack as much as possible
 		if (attack == 0x01) {
