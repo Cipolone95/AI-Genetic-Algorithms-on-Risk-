@@ -8,6 +8,13 @@ import java.util.Date;
 import java.util.Random;
 import java.util.List;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
 public class GeneticAgent extends Pixie implements LuxAgent 
 {
 // This agent's ownerCode:
@@ -20,7 +27,7 @@ public class GeneticAgent extends Pixie implements LuxAgent
 	protected Country[] countries;
 	// It might be useful to have a random number generator
 	protected Random rand;
-        protected AgentLogger logger;
+        protected Logger logger;
 
 	// This will contain the genes of our individual genetic agent.
 	private Individual geneticAgent;
@@ -35,10 +42,24 @@ public class GeneticAgent extends Pixie implements LuxAgent
 	// Save references
 	public void setPrefs(int newID, Board theboard) {
 		ID = newID; // this is how we distinguish what countries we own
-                String addToFile = Integer.toString(ID) + new Date().getTime();
-                this.logger = new AgentLogger(addToFile);
+                //String addToFile = Integer.toString(ID) + new Date().getTime();
+            try {
+            
+            boolean append = true;
+	    FileHandler handler = new FileHandler("c://TEMP/logger.txt", append);
+
+	    logger = Logger.getLogger("com.sillysoft.lux.agent");
+	    logger.addHandler(handler);
+            SimpleFormatter formatter = new SimpleFormatter();
+            handler.setFormatter(formatter);
+                }
+                catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+                logger.info("HELP!!!");
                 this.geneticAgent = new Individual();
-                logger.log("Genetic Agent create at" + new Date().getTime());
 		board = theboard;
 		countries = board.getCountries();
 	}
@@ -90,7 +111,7 @@ public class GeneticAgent extends Pixie implements LuxAgent
 	 * @see com.sillysoft.lux.agent.Pixie#placeArmies(int)
 	 */
 	public void placeArmies(int numberOfArmies) {
-                logger.log("Place Armies");
+                logger.info("Place Armies");
                 byte[] deployGene = new byte[1];
                 //holds the terrioty advantage score
                 int territoryScore = 0;
