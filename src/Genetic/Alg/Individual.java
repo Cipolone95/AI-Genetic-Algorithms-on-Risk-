@@ -1,5 +1,5 @@
 package Genetic.Alg;
-
+import java.util.Arrays;
 
 /**
  * This class is used to make an individual to add to the population
@@ -10,8 +10,8 @@ package Genetic.Alg;
  */
 public class Individual {
 
-    //we will need to scale this to fit our project.
-	static int ChromosomeLength = 64;
+	//Each phases is 3 bytes in this order; Deploy, attack, fortify.
+	static int ChromosomeLength = 6;
     
     private byte[] genes = new byte[ChromosomeLength];
     //relative fitness of this individual
@@ -32,6 +32,30 @@ public class Individual {
      */
     public byte getGene(int index) {
         return genes[index];
+    }
+    
+    /**
+     * Returns the whole chromosome of this individual.
+     * @return the whole chromosome
+     */
+    public byte[] getChromosome(){
+    	return genes;
+    }
+    
+    /**
+     * Returns gene phase based of parameter.
+     * @return Returns specific phase requested.
+     */
+    public byte[] getPhase(String phase){
+    	switch(phase){
+    	case "deploy":
+    		return Arrays.copyOfRange(genes,0,1);
+    	case "attack":
+    		return Arrays.copyOfRange(genes, 2, 3);
+    	case "fortify":
+    		return Arrays.copyOfRange(genes, 4, 5);
+    	}
+    	return genes;
     }
 
     /**

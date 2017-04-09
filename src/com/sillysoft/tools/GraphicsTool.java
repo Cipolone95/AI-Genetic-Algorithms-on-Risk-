@@ -11,7 +11,7 @@ import java.net.URL;
 
 // Needed for the saveComponentAsJPEG method
 import java.io.*;
-import com.sun.image.codec.jpeg.*;
+//import com.sun.image.codec.jpeg.*;
 
 import javax.imageio.*;	// for PNG writing method
 

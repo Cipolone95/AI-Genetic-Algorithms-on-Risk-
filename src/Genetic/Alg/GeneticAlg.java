@@ -1,5 +1,7 @@
 package Genetic.Alg;
 
+import Genetic.Alg.Individual;
+
 /**
  * @author Travis Buff, Adam Tucker, Peter Cipolone
  * This class will be the basis for the genetic algorithm that our risk "agent" will be using.
