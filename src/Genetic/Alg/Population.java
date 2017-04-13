@@ -1,6 +1,7 @@
 package Genetic.Alg;
 
 import Genetic.Alg.Individual;
+import com.sillysoft.lux.agent.GeneticAgent;
 
 /**
  *The population class initializes new sized population based off
@@ -13,7 +14,7 @@ import Genetic.Alg.Individual;
  */
 public class Population {
 
-    Individual[] individuals;
+    GeneticAgent[] individuals;
 
     /*
      * Constructor
@@ -21,12 +22,12 @@ public class Population {
      * If initialized allows changing of population size.
      */
     public Population(int populationSize, boolean initialise) {
-        individuals = new Individual[populationSize];
+        individuals = new GeneticAgent[populationSize];
         if(initialise){
             // Loop and create individuals
             for (int i = 0; i < size(); i++) {
-                Individual newIndividual = new Individual();
-                newIndividual.generateIndividual();
+                GeneticAgent newIndividual = new GeneticAgent();
+                newIndividual.geneticAgent.generateIndividual();
                 saveIndividual(i, newIndividual);
             }
         }
@@ -37,18 +38,18 @@ public class Population {
      * @param index of wanted individual
      * @return individual at this index
      */
-    public Individual getIndividual(int index) {
+    public GeneticAgent getIndividual(int index) {
         return individuals[index];
     }
 
     /**
      * @return individual that is the fittest in this population
      */
-    public Individual getFittest() {
-        Individual fittest = individuals[0];
+    public GeneticAgent getFittest() {
+        GeneticAgent fittest = individuals[0];
         // Loop through individuals to find fittest
         for (int i = 0; i < size(); i++) {
-            if (fittest.getFitness() <= getIndividual(i).getFitness()) {
+            if (fittest.geneticAgent.getFitness(fittest) <= getIndividual(i).geneticAgent.getFitness(fittest)) {
                 fittest = getIndividual(i);
             }
         }
@@ -67,7 +68,7 @@ public class Population {
     /**
      * Saves specified individual to specified index in individuals.
      */
-    public void saveIndividual(int index, Individual indiv) {
+    public void saveIndividual(int index, GeneticAgent indiv) {
         individuals[index] = indiv;
     }
 }
