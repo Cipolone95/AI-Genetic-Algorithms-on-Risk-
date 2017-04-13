@@ -1,6 +1,7 @@
 package Genetic.Alg;
 
 import Genetic.Alg.Individual;
+import com.sillysoft.lux.agent.GeneticAgent;
 
 /**
  * @author Travis Buff, Adam Tucker, Peter Cipolone
@@ -40,9 +41,9 @@ public class GeneticAlg {
         // Loop over the population size and create new individuals with
         // crossover
         for (int i = elitismOffset; i < pop.size(); i++) {
-            Individual indiv1 = tournamentSelection(pop);
-            Individual indiv2 = tournamentSelection(pop);
-            Individual newIndiv = crossover(indiv1, indiv2);
+            GeneticAgent indiv1 = tournamentSelection(pop);
+            GeneticAgent indiv2 = tournamentSelection(pop);
+            GeneticAgent newIndiv = crossover(indiv1, indiv2);
             newPopulation.saveIndividual(i, newIndiv);
         }
 
@@ -55,34 +56,34 @@ public class GeneticAlg {
     }
 
     // Crossover individuals
-    private static Individual crossover(Individual indiv1, Individual indiv2) {
-        Individual newSol = new Individual();
+    private static GeneticAgent crossover(GeneticAgent indiv1, GeneticAgent indiv2) {
+        GeneticAgent newSol = new GeneticAgent();
         // Loop through genes
-        for (int i = 0; i < indiv1.size(); i++) {
+        for (int i = 0; i < indiv1.geneticAgent.size(); i++) {
             // Crossover
             if (Math.random() <= crossRate) {
-                newSol.setGene(i, indiv1.getGene(i));
+                newSol.geneticAgent.setGene(i, indiv1.geneticAgent.getGene(i));
             } else {
-                newSol.setGene(i, indiv2.getGene(i));
+                newSol.geneticAgent.setGene(i, indiv2.geneticAgent.getGene(i));
             }
         }
         return newSol;
     }
 
     // Mutate an individual
-    private static void mutate(Individual indiv) {
+    private static void mutate(GeneticAgent indiv) {
         // Loop through genes
-        for (int i = 0; i < indiv.size(); i++) {
+        for (int i = 0; i < indiv.geneticAgent.size(); i++) {
             if (Math.random() <= mutRate) {
                 // Create random gene
                 byte gene = (byte) Math.round(Math.random());
-                indiv.setGene(i, gene);
+                indiv.geneticAgent.setGene(i, gene);
             }
         }
     }
 
     // Select individuals for crossover
-    private static Individual tournamentSelection(Population pop) {
+    private static GeneticAgent tournamentSelection(Population pop) {
         // Create a tournament population
         Population tournament = new Population(tournamentSize, false);
         // For each place in the tournament get a random individual
@@ -91,7 +92,7 @@ public class GeneticAlg {
             tournament.saveIndividual(i, pop.getIndividual(randomId));
         }
         // Get the fittest
-        Individual fittest = tournament.getFittest();
+        GeneticAgent fittest = tournament.getFittest();
         return fittest;
     }
 }
