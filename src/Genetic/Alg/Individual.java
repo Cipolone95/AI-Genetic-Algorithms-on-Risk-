@@ -1,5 +1,6 @@
 package Genetic.Alg;
 import java.util.Arrays;
+import com.sillysoft.lux.agent.GeneticAgent;
 
 /**
  * This class is used to make an individual to add to the population
@@ -77,9 +78,9 @@ public class Individual {
     /**
      * returns fitness value of this individual.
      */
-    public int getFitness() {
+    public int getFitness(GeneticAgent ind) {
         if (fitness == 0) {
-            fitness = Fitness.getFitness(this);
+            fitness = Fitness.getFitness(ind);
         }
         return fitness;
     }
