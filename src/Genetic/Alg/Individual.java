@@ -21,8 +21,13 @@ public class Individual {
 
     // Create a random individual
     public void generateIndividual() {
+    	byte gene;
         for (int i = 0; i < size(); i++) {
-            byte gene = (byte) Math.round(Math.random());
+        	if(i == 3){
+        		 gene = (byte) (Math.random() * 5);
+        	}else{
+        		 gene = (byte) (Math.random() * 8);
+        	}
             genes[i] = gene;
         }
     }
