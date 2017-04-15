@@ -122,7 +122,8 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
     }
 
     public int armyVantageScore(Individual2 ind) {
-        System.out.println("Begin Army Vantage Score");
+        System.out.println("Begin Army Vantage "
+        		+ "Score");
         int armyVantageScore = 0;
         //holds the number of enemy neighbors next to the country "us"
         double myArmies = 0;
@@ -630,7 +631,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * @see com.sillysoft.lux.agent.Pixie#fortifyPhase()
      */
     public void fortifyPhase() {
-        byte fortify = (geneticAgent.getPhase("fortify"))[1];
+        byte fortify = (geneticAgent.getPhase("fortify"))[0];
 
         if (fortify == 0x00) {
             // Cycle through all the countries and find countries that we could
