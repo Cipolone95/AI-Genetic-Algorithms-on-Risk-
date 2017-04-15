@@ -39,6 +39,9 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
     public GeneticAgent2() {
         rand = new Random();
         geneticAgent = new Individual2();
+        geneticAgent.generateIndividual();
+        System.out.println("this gets called");
+        System.out.println("attackbits "+ geneticAgent.getGene(2));
 
     }
 
@@ -186,7 +189,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         Byte byteScore = Byte.valueOf(Integer.toString(totalVantageScore));
         geneticAgent.setGene(0, byteScore);
         */
-        Population2 genPop = new Population2(100, true);
+        Population2 genPop = new Population2(2, true);
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < genPop.size(); i++) {
                     // placeInitialArmies is based of the first gene in the byte array
