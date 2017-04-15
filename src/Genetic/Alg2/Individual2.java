@@ -1,6 +1,7 @@
 package Genetic.Alg2;
 import com.sillysoft.lux.Board;
 import com.sillysoft.lux.Country;
+
 import java.util.Arrays;
 import com.sillysoft.lux.agent.GeneticAgent2;
 import java.util.Random;
@@ -19,22 +20,26 @@ public class Individual2 {
 	//Each phases is 3 bytes in this order; Deploy, attack, fortify.
     static int ChromosomeLength = 6;
     
-    private byte[] genes = new byte[ChromosomeLength];
+    private static byte[] genes = new byte[ChromosomeLength];
     //relative fitness of this individual
     //we will have to come up with a scale
     private int fitness = 0;
 
     // Create a random individual
     public void generateIndividual() {
+    	byte gene;
         for (int i = 0; i < size(); i++) {
-            byte gene = (byte) Math.round(Math.random());
-            while(gene > 8){
-            	gene = (byte) Math.round(Math.random());
-            }
+        	gene = (byte) (Math.random() * 256);
             genes[i] = gene;
         }
     }
 
+    public static void main(String[] args){
+    	Individual2 ind = new Individual2();
+    	ind.generateIndividual();
+    	String s1 = String.format("%8s", Integer.toBinaryString(genes[0] & 0xFF)).replace(' ', '0');
+    	System.out.println(s1);
+    }
     
     /**
      * returns byte from specified index.
