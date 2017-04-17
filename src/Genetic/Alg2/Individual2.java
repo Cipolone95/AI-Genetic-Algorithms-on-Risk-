@@ -29,7 +29,11 @@ public class Individual2 {
     public void generateIndividual() {
     	byte gene;
         for (int i = 0; i < size(); i++) {
-        	gene = (byte) (Math.random() * 256);
+            byte gene = (byte) Math.round(Math.random());
+            while(gene > 8){
+            	gene = (byte) Math.round(Math.random());
+            }
+
             genes[i] = gene;
         }
     }
