@@ -1,11 +1,14 @@
 package com.sillysoft.lux.agent;
 
+import com.sillysoft.lux.agent.SmartAgentBase;
 import Genetic.Alg.Fitness;
 import Genetic.Alg.GeneticAlg;
 import Genetic.Alg.Individual;
 import Genetic.Alg.Population;
 import com.sillysoft.lux.*;
 import com.sillysoft.lux.util.*;
+
+import java.util.ArrayList;
 import java.util.Date;
 
 import java.util.Random;
@@ -18,7 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public class GeneticAgent extends Pixie implements LuxAgent {
+public class GeneticAgent extends SmartAgentBase implements LuxAgent {
 // This agent's ownerCode:
 
     protected int ID;
@@ -36,10 +39,12 @@ public class GeneticAgent extends Pixie implements LuxAgent {
     private boolean[] ourConts; // whether we will spend efforts taking/holding
     // each continent
     boolean PlaceToAttack = false;
-
+    protected int borderForce = 20;
+    
     public GeneticAgent() {
         rand = new Random();
         geneticAgent = new Individual();
+        geneticAgent.generateIndividual();
 
     }
 
@@ -154,6 +159,88 @@ public class GeneticAgent extends Pixie implements LuxAgent {
         return armyVantageScore(ind) + territoryScore(ind);
     }
 
+    
+ // This method is a hook that EvilPixie uses to place better during hogwild
+    boolean placeHogWild(int numberOfArmies)
+    	{
+    	return false;
+    	}
+
+ // returns true if we want at least one continent
+    boolean setupOurConts(int numberOfArmies)
+    	{
+    	if (ourConts == null)
+    		ourConts = new boolean[numContinents];
+
+    	// calculate the armies needed to conquer each continent
+    	int[] neededForCont = new int[numContinents];
+    	for (int i = 0; i < numContinents; i++)
+    		{
+    		neededForCont[i] = BoardHelper.getEnemyArmiesInContinent(ID, i, countries);	// enemies in the cont
+    		neededForCont[i] -= BoardHelper.getPlayerArmiesInContinent(ID, i, countries);	// minus our armies in the cont
+    		// also minus our armies in countries neighboring the cont
+    		neededForCont[i] -= BoardHelper.getPlayerArmiesAdjoiningContinent(ID, i, countries);
+    		}
+
+    	// say we can give at most (1/numContinents)*numberOfArmies armies to each continent.
+    	boolean wantACont = false; 	// if we think we can take/hold any continents
+    	for (int i = 0; i < numContinents; i++)
+    		{
+    		if (neededForCont[i] < (1.0/numContinents)*numberOfArmies && board.getContinentBonus(i) > 0)
+    			{
+    			ourConts[i] = true;
+    			wantACont = true;
+    			}
+    		else
+    			ourConts[i] = false;
+    		}
+    	return wantACont;
+    	}
+ 
+    boolean borderCountryNeedsHelp(Country border)
+	{
+	return border.getArmies() <= borderForce;
+	}  
+    
+ // a test of whether or not we should send some armies this cont's way
+    protected boolean continentNeedsHelp(int cont)
+    	{
+    	// if we don't own it then it deffinately needs some help
+    	if (! BoardHelper.playerOwnsContinent(ID, cont, countries) )
+    		return true;
+
+    	// otherwise we own it.
+    	// check each border
+    	int[] borders = BoardHelper.getContinentBorders(cont, countries);
+    	for (int i = 0; i < borders.length; i++)
+    		{
+    		if (borderCountryNeedsHelp(countries[ borders[i] ]))
+    			return true;
+    		}
+
+    	return false;
+    	}
+    
+    protected void placeRemainder(int numberOfArmies)
+	{
+    	placeNearEnemies(numberOfArmies);
+	}
+
+ // place evenly amongst our countries that have enemies
+    protected void placeNearEnemies(int numberOfArmies)
+    	{
+    	int i = 0;
+    	while (numberOfArmies > 0)
+    		{
+    		if (countries[i].getOwner() == ID && countries[i].getNumberEnemyNeighbors() > 0)
+    			{
+    			board.placeArmies(1, i);
+    			numberOfArmies--;
+    			}
+    		i = (i+1)%numCountries;
+    		}
+    	}
+
     /*
 	 * Place armies based on deploy phases first gene Gene uses only up to 0x07
 	 * so 0000 0111 over 7 is unused. (non-Javadoc)
@@ -168,17 +255,17 @@ public class GeneticAgent extends Pixie implements LuxAgent {
         Byte byteScore = Byte.valueOf(Integer.toString(totalVantageScore));
         geneticAgent.setGene(0, byteScore);
         */
-        Population genPop = new Population(10, true);
-        for (int j = 0; j < 3; j++) {
-            for (int i = 0; i < genPop.size(); i++) {
+       // Population genPop = new Population(10, true);
+        //for (int j = 0; j < 3; j++) {
+          //  for (int i = 0; i < genPop.size(); i++) {
                 // placeInitialArmies is based of the first gene in the byte array
                 // for the deploy phase.
-                GeneticAgent ind = genPop.getIndividual(i);
-                ind.countries = this.countries;
-                ind.board = this.board;
+               // GeneticAgent ind = genPop.getIndividual(i);
+               // ind.countries = this.countries;
+              //  ind.board = this.board;
                 
 
-                byte deployArmies = (ind.geneticAgent.getPhase("deploy"))[0];
+                byte deployArmies = (this.geneticAgent.getPhase("deploy"))[0];
                 //byte deployArmies = 0X01;
                 // Armies where they can attack the most countries.
                 if (deployArmies == 0x01) {
@@ -189,7 +276,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 
                     // Use a PlayerIterator to cycle through all the countries that we
                     // own.
-                    CountryIterator own2 = new PlayerIterator(ind.ID, ind.countries);
+                    CountryIterator own2 = new PlayerIterator(this.ID, this.countries);
                     while (own2.hasNext()) {
                         Country us = own2.next();
                         subTotalEnemies = us.getNumberEnemyNeighbors();
@@ -203,13 +290,13 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 
                     // So now placeOn is the country that we own with the most enemies.
                     // Tell the board to place all of our armies there
-                    ind.board.placeArmies(numberOfArmies, placeOn);
+                    this.board.placeArmies(numberOfArmies, placeOn);
                 } // Armies placed on weakest countries owned.
                 else if (deployArmies == 0x02) {
                     int leftToPlace = numberOfArmies;
                     while (leftToPlace > 0) {
                         int leastArmies = 1000000;
-                        CountryIterator ours = new PlayerIterator(ind.ID, ind.countries);
+                        CountryIterator ours = new PlayerIterator(this.ID, this.countries);
                         while (ours.hasNext() && leftToPlace > 0) {
                             Country us = ours.next();
 
@@ -218,11 +305,11 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 
                         // Now place an army on anything with less or equal to
                         // <leastArmies>
-                        CountryIterator placers = new ArmiesIterator(ind.ID, -(leastArmies), ind.countries);
+                        CountryIterator placers = new ArmiesIterator(this.ID, -(leastArmies), this.countries);
 
                         while (placers.hasNext()) {
                             Country us = placers.next();
-                            ind.board.placeArmies(1, us);
+                            this.board.placeArmies(1, us);
                             leftToPlace -= 1;
                         }
                     }
@@ -230,35 +317,35 @@ public class GeneticAgent extends Pixie implements LuxAgent {
                 else if (deployArmies == 0x03) {
                     int test;
                     do {
-                        test = rand.nextInt(ind.countries.length);
-                    } while (ind.countries[test].getOwner() != ind.ID || ind.countries[test].getWeakestEnemyNeighbor() == null);
+                        test = rand.nextInt(this.countries.length);
+                    } while (this.countries[test].getOwner() != this.ID || this.countries[test].getWeakestEnemyNeighbor() == null);
 
-                    ind.board.placeArmies(numberOfArmies, test);
+                    this.board.placeArmies(numberOfArmies, test);
                 } // places armies in an even cluster.
                 else if (deployArmies == 0x04) {
-                    ind.PlaceToAttack = true;
-                    if (BoardHelper.playerOwnsAnyPositiveContinent(ind.ID, ind.countries, ind.board)) {
+                    this.PlaceToAttack = true;
+                    if (BoardHelper.playerOwnsAnyPositiveContinent(this.ID, this.countries, this.board)) {
                         // Center the cluster on the biggest continent we own
-                        int ownCont = ind.getMostValuablePositiveOwnedCont();
+                        int ownCont = this.getMostValuablePositiveOwnedCont();
                         placeArmiesOnClusterBorder(numberOfArmies,
-                                ind.countries[BoardHelper.getCountryInContinent(ownCont, ind.countries)]);
+                                this.countries[BoardHelper.getCountryInContinent(ownCont, this.countries)]);
                     } else {
                         // Center the cluster on the easiest continent to take
-                        int wantCont = ind.getEasiestContToTake(); // getEasiestContToTake()
+                        int wantCont = this.getEasiestContToTake(); // getEasiestContToTake()
                         // is a SmartAgentBase
                         // method
-                        ind.placeArmiesToTakeCont(numberOfArmies, wantCont);
+                        this.placeArmiesToTakeCont(numberOfArmies, wantCont);
                     }
                 } // looking for continents
                 else if (deployArmies == 0x05) {
-                    ind.PlaceToAttack = true;
-                    if (ind.placeHogWild(numberOfArmies)) {
+                    this.PlaceToAttack = true;
+                    if (this.placeHogWild(numberOfArmies)) {
                         return;
                     }
 
-                    if (!ind.setupOurConts(numberOfArmies)) {
+                    if (!this.setupOurConts(numberOfArmies)) {
                         // then we don't think we can take/hold any continents
-                        ind.placeArmiesToTakeCont(numberOfArmies, getEasiestContToTake());
+                        this.placeArmiesToTakeCont(numberOfArmies, getEasiestContToTake());
                         return;
                     }
 
@@ -268,8 +355,8 @@ public class GeneticAgent extends Pixie implements LuxAgent {
                     while (armiesPlaced < numberOfArmies && oneNeedsHelp) {
                         oneNeedsHelp = false;
                         for (int c = 0; c < numContinents; c++) {
-                            if (ourConts[c] && ind.continentNeedsHelp(c)) {
-                                ind.placeArmiesToTakeCont(1, c);
+                            if (ourConts[c] && this.continentNeedsHelp(c)) {
+                                this.placeArmiesToTakeCont(1, c);
                                 armiesPlaced++;
                                 oneNeedsHelp = true;
                             }
@@ -277,40 +364,40 @@ public class GeneticAgent extends Pixie implements LuxAgent {
                     }
 
                     // We get here if all our borders are above borderforce.
-                    ind.placeRemainder(numberOfArmies - armiesPlaced);
+                    this.placeRemainder(numberOfArmies - armiesPlaced);
                 } // aggressive towards human player
                 else if (deployArmies == 0x06) {
-                    ind.PlaceToAttack = true;
-                    if (ind.placeArmiesToKillDominantPlayer(numberOfArmies)) {
+                    this.PlaceToAttack = true;
+                    if (this.placeArmiesToKillDominantPlayer(numberOfArmies)) {
                         return;
                     }
 
-                    if (BoardHelper.playerOwnsAnyPositiveContinent(ind.ID, ind.countries, ind.board)) {
-                        int ownCont = ind.getMostValuablePositiveOwnedCont();
-                        ind.placeArmiesOnClusterBorder(numberOfArmies,
-                                ind.countries[BoardHelper.getCountryInContinent(ownCont, ind.countries)]);
+                    if (BoardHelper.playerOwnsAnyPositiveContinent(this.ID, this.countries, this.board)) {
+                        int ownCont = this.getMostValuablePositiveOwnedCont();
+                        this.placeArmiesOnClusterBorder(numberOfArmies,
+                                this.countries[BoardHelper.getCountryInContinent(ownCont, this.countries)]);
                     } else {
-                        int wantCont = ind.getEasiestContToTake();
-                        ind.placeArmiesToTakeCont(numberOfArmies, wantCont);
+                        int wantCont = this.getEasiestContToTake();
+                        this.placeArmiesToTakeCont(numberOfArmies, wantCont);
                     }
                 } // place first to kill dominant player then place to get continents
                 else if (deployArmies == 0x07) {
-                    if (ind.placeArmiesToKillDominantPlayer(numberOfArmies)) {
-                        ind.setupOurConts(0);
+                    if (this.placeArmiesToKillDominantPlayer(numberOfArmies)) {
+                        this.setupOurConts(0);
                         return;
                     }
 
-                    super.placeArmies(numberOfArmies);
+                    placeArmies(numberOfArmies);
                 }
-                int totalVantageScoreForInd = getDeployFitness(ind);
-                Byte byteScoreForInd = Byte.valueOf(Integer.toString(totalVantageScoreForInd));
-                ind.geneticAgent.setGene(0, byteScoreForInd);
-            }
-            genPop = GeneticAlg.evolvePopulation(genPop);
-        }
+              //  int totalVantageScoreForind = getDeployFitness(this);
+               // Byte byteScoreForInd = Byte.valueOf(Integer.toString(totalVantageScoreForInd));
+               // this.geneticAgent.setGene(0, byteScoreForInd);
+            
+           // genPop = GeneticAlg.evolvePopulation(genPop);
         
-        board = genPop.getFittest().board;
-        countries = genPop.getFittest().countries;
+        
+       // board = genPop.getFittest().board;
+       // countries = genPop.getFittest().countries;
                 
     }
 
@@ -442,6 +529,32 @@ public class GeneticAgent extends Pixie implements LuxAgent {
         }
     }
 
+    
+ // Execute all the attacks possible in this continent where we outnumber the enemy
+    protected void attackInContinent( int cont )
+    	{
+    	float outnumberBy = 1;
+    	CountryIterator continent = new ContinentIterator(cont, countries);
+    	while (continent.hasNext())
+    		{
+    		Country c = continent.next();
+    		if (c.getOwner() != ID)
+    			{
+    			// try and find a neighbor that we own, and attack this country
+    			CountryIterator neighbors = new NeighborIterator(c);
+    			while (neighbors.hasNext())
+    				{
+    				Country possAttack = neighbors.next();
+    				if (possAttack.getOwner() == ID && possAttack.getArmies() > c.getArmies()*outnumberBy && c.getOwner() != ID && possAttack.canGoto(c))
+    					{
+    					board.attack(possAttack, c, true);
+    					}
+    				}
+    			}
+    		}
+    	}
+
+    
     /*
 	 * Attack based on attack phases first gene Gene uses only up to 0x07 so
 	 * 0000 0111 over 7 is unused. (non-Javadoc)
@@ -715,6 +828,71 @@ public class GeneticAgent extends Pixie implements LuxAgent {
         return 0;
     }
 
+    protected void fortifyContinent( int cont )
+	{
+	// We work from the borders back, fortifying closer.
+	// Start out by getting a List of the cont's borders:
+	int[] borders = BoardHelper.getContinentBorders(cont, countries);
+	List cluster = new ArrayList();
+	for (int i = 0; i < borders.length; i++) {
+		cluster.add(countries[borders[i]]);
+		}
+
+	// So now the cluster borders are in <cluster>. fill it up while fortifying towards the borders.
+	for (int i = 0; i < cluster.size(); i++) {
+		CountryIterator neighbors = new NeighborIterator( (Country)cluster.get(i) );
+		while ( neighbors.hasNext()) {
+			Country neighbor = neighbors.next();
+			if ( neighbor.getOwner() == ID && ! cluster.contains(neighbor) && neighbor.getContinent() == cont) {
+				// Then <neighbor> is part of the cluster. fortify any armies back and add to the List
+				board.fortifyArmies( neighbor.getMoveableArmies(), neighbor, (Country)cluster.get(i) );
+				cluster.add(neighbor);
+				}
+			}
+		}
+	}
+
+    
+ // called on continents that we don't own.
+ // fortify our guys towards weak enemy countries.
+ protected void fortifyContinentScraps( int cont)
+ 	{
+ 	CountryIterator e = new ContinentIterator(cont, countries);
+ 	while (e.hasNext())
+ 		{
+ 		Country c = e.next();
+ 		if (c.getOwner() == ID && c.getMoveableArmies() > 0)
+ 			{
+ 			// we COULD move armies from 'c'
+ 			int weakestArmies = 1000000;
+ 			Country weakestLink = null;
+ 			// if it has a neighbor with a weaker enemy then move there
+ 			CountryIterator n = new NeighborIterator(c);
+ 			while (n.hasNext())
+ 				{
+ 				Country possMoveTo = n.next();
+ 				if (possMoveTo.getOwner() == ID)
+ 					{
+ 					Country themWeak = possMoveTo.getWeakestEnemyNeighbor();
+ 					if (themWeak != null && themWeak.getArmies() < weakestArmies)
+ 						{
+ 						weakestArmies = possMoveTo.getWeakestEnemyNeighbor().getArmies();
+ 						weakestLink = possMoveTo;
+ 						}
+ 					}
+ 				}
+ 			Country hereWeakest = c.getWeakestEnemyNeighbor();
+ 			// if a neighbor has a weaker country then we do here move our armies
+ 			if (hereWeakest == null || weakestArmies < hereWeakest.getArmies())
+ 				{
+ 				if (weakestLink != null)
+ 					board.fortifyArmies( c.getMoveableArmies(), c, weakestLink );
+ 				}
+ 			}
+ 		}
+ 	}
+    
+    
     /*
 	 * The fortifyPhase will be based off of the fortify 1st gene in the
 	 * individuals chromosome. The fortifyphase is used for the player to
@@ -725,7 +903,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * @see com.sillysoft.lux.agent.Pixie#fortifyPhase()
      */
     public void fortifyPhase() {
-        byte fortify = (geneticAgent.getPhase("fortify"))[1];
+        byte fortify = (geneticAgent.getPhase("fortify"))[0];
 
         if (fortify == 0x00) {
             // Cycle through all the countries and find countries that we could
