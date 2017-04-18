@@ -187,10 +187,10 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 int solution = (myArmies - numEnemyArmies);
                 //System.out.println("Solution" + solution);
                 if (solution >= 0) {
-                    armyVantageScore = armyVantageScore + solution;
+                    armyVantageScore = solution;
                 } else {
                     // Solution is negative so it will subtract even though it is adding
-                    armyVantageScore = armyVantageScore + solution;
+                    armyVantageScore = 0;
                 }
             }
         }
@@ -398,7 +398,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                     int armyDifference = us.getArmies() - neighbor.getArmies();
                     if (armyDifference > maxArmyDifference) {
                         maxArmyDifference = armyDifference;
-                        System.out.println("US" + us.getName()+ us.getArmies() + " and them" + neighbor.getName()+neighbor.getArmies());
+                        System.out.println("US" + us.getName() + us.getArmies() + " and them" + neighbor.getName() + neighbor.getArmies());
                         System.out.println("max army diff " + maxArmyDifference);
                         ind.genAgent.countryToAttack = neighbor.getCode();
                     }
@@ -448,7 +448,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
             //System.out.println("Cond for attack" + (temp.getGene(1) > 1));
 
             CountryIterator own = new PlayerIterator(ID, countries);
-            
+
             boolean looking = true;
             Country cca = null;
             Country ccd = null;
@@ -457,21 +457,21 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 Country us = own.next();
                 // Get an array of countries touching "us"
                 if (us.getArmies() != 1) {
-                Country[] nextToMe = us.getAdjoiningList();
-                for (int i = 0; i < nextToMe.length; i++) {
-                    Country neighbor = nextToMe[i];
-                    System.out.println("Neig code " + neighbor.getCode() + " Country name is " + neighbor.getName());
-                    System.out.println("Temp agent attack id " + temp.genAgent.countryToAttack);
-                    System.out.println("Neighbor id" + neighbor.getOwner());
-                    System.out.println("us ownder + " + us.getOwner() + " with country name " + us.getName());
-                    if (neighbor.getCode() == temp.genAgent.countryToAttack && neighbor.getOwner() != us.getOwner() ) {
-                        cca = us;
-                        ccd = neighbor;
-                        System.out.println("us " + cca);
-                        System.out.println("them " + ccd);
-                        looking = false;
+                    Country[] nextToMe = us.getAdjoiningList();
+                    for (int i = 0; i < nextToMe.length; i++) {
+                        Country neighbor = nextToMe[i];
+                        System.out.println("Neig code " + neighbor.getCode() + " Country name is " + neighbor.getName());
+                        System.out.println("Temp agent attack id " + temp.genAgent.countryToAttack);
+                        System.out.println("Neighbor id" + neighbor.getOwner());
+                        System.out.println("us ownder + " + us.getOwner() + " with country name " + us.getName());
+                        if (neighbor.getCode() == temp.genAgent.countryToAttack && neighbor.getOwner() != us.getOwner()) {
+                            cca = us;
+                            ccd = neighbor;
+                            System.out.println("us " + cca);
+                            System.out.println("them " + ccd);
+                            looking = false;
+                        }
                     }
-                }
                 }
             }
             if (cca != null || ccd != null) {
@@ -564,7 +564,47 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         return byteNumArmies.intValue();
     }
 
-    /*
+    public int fortifyFitness(int countryID) {
+
+
+            if (countries[countryID].getOwner() == ID && countries[countryID].getMoveableArmies() > 0) {
+                // This means we've found a country of ours that we can move
+                // from if we want to.
+
+                // We determine the best country by counting the enemy
+                // neighbors it has.
+                // The most enemy neighbors is where we move. Also, if there
+                // are 0 enemy
+                // neighbors where the armies are on now, we move to a
+                // random neighbor (in
+                // the hopes we'll find an enemy eventually).
+                // To cycle through the neighbors we could use a
+                // NeighborIterator,
+                // but we can also directly use the country's AdjoingingList
+                // array.
+                // Let's use the array...
+                Country[] neighbors = countries[countryID].getAdjoiningList();
+                int countryCodeBestProspect = -1;
+                int bestEnemyNeighbors = 0;
+                int enemyNeighbors = 0;
+
+                for (int j = 0; j < neighbors.length; j++) {
+                    if (neighbors[j].getOwner() == ID) {
+                        enemyNeighbors = neighbors[j].getNumberEnemyNeighbors();
+
+                        if (enemyNeighbors > bestEnemyNeighbors) {
+                            // Then so far this is the best country to move
+                            // to:
+                            countryCodeBestProspect = neighbors[j].getCode();
+                            bestEnemyNeighbors = enemyNeighbors;
+                        }
+                    }
+                }
+
+            }
+        return 0;
+    }
+            /*
 	 * The fortifyPhase will be based off of the fortify 1st gene in the
 	 * individuals chromosome. The fortifyphase is used for the player to
 	 * fortify themselves and prepare for the next turn.
@@ -572,121 +612,51 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * (non-Javadoc)
 	 * 
 	 * @see com.sillysoft.lux.agent.Pixie#fortifyPhase()
-     */
+             */
     public void fortifyPhase() {
-        byte fortify = (geneticAgent.getPhase("fortify"))[0];
 
-        if (fortify == 0x00) {
-            // Cycle through all the countries and find countries that we could
-            // move from:
-            for (int i = 0; i < board.getNumberOfCountries(); i++) {
-                if (countries[i].getOwner() == ID && countries[i].getMoveableArmies() > 0) {
-                    // This means we've found a country of ours that we can move
-                    // from if we want to.
+        Population2 genPop = new Population2(100, true);
+        Individual2 ind = new Individual2();
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < genPop.size(); i++) {
+                ind = genPop.getIndividual(i);
+                ind.genAgent = this;
+                System.out.println("Individual :" + i + " " + ind);
+                //   placed on countries we already own
 
-                    // We determine the best country by counting the enemy
-                    // neighbors it has.
-                    // The most enemy neighbors is where we move. Also, if there
-                    // are 0 enemy
-                    // neighbors where the armies are on now, we move to a
-                    // random neighbor (in
-                    // the hopes we'll find an enemy eventually).
-                    // To cycle through the neighbors we could use a
-                    // NeighborIterator,
-                    // but we can also directly use the country's AdjoingingList
-                    // array.
-                    // Let's use the array...
-                    Country[] neighbors = countries[i].getAdjoiningList();
-                    int countryCodeBestProspect = -1;
-                    int bestEnemyNeighbors = 0;
-                    int enemyNeighbors = 0;
+                int randCountry = rand.nextInt(ind.genAgent.countries.length);
 
-                    for (int j = 0; j < neighbors.length; j++) {
-                        if (neighbors[j].getOwner() == ID) {
-                            enemyNeighbors = neighbors[j].getNumberEnemyNeighbors();
-
-                            if (enemyNeighbors > bestEnemyNeighbors) {
-                                // Then so far this is the best country to move
-                                // to:
-                                countryCodeBestProspect = neighbors[j].getCode();
-                                bestEnemyNeighbors = enemyNeighbors;
-                            }
-                        }
-                    }
-                    // Now let's calculate the number of enemies of the country
-                    // where the armies
-                    // already are, to see if they should stay here:
-                    enemyNeighbors = countries[i].getNumberEnemyNeighbors();
-
-                    // If there's a better country to move to, move:
-                    if (bestEnemyNeighbors > enemyNeighbors) {
-                        // Then the armies should move:
-                        // So now the country that had the best ratio should be
-                        // moved to:
-                        board.fortifyArmies(countries[i].getMoveableArmies(), i, countryCodeBestProspect);
-                    } // If there are no good places to move to, move to a random
-                    // place:
-                    else if (enemyNeighbors == 0) {
-                        // We choose an int from [0, neighbors.length]:
-                        int randCC = rand.nextInt(neighbors.length);
-                        board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
-                    }
-                }
+                System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
+                int bestCountryToFortify = fortifyFitness(randCountry);
+                Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToFortify));
+                ind.setGene(2, byteScoreForInd);
             }
-        } // If we own two touching continents we equalize the armies between
-        // them.
-        else if (fortify == 0x01) {
-            boolean changed = true;
-            while (changed) {
-                changed = false;
-                for (int i = 0; i < board.getNumberOfCountries(); i++) {
-                    if (countries[i].getOwner() == ID && countries[i].getMoveableArmies() > 0) {
-                        // This means we COULD fortify out of this country if we
-                        // wanted to.
-
-                        // Get country[i]'s neighbors:
-                        Country[] neighbors = countries[i].getAdjoiningList();
-
-                        // Now loop through the neighbors and see if we own any
-                        // of them.
-                        for (int j = 0; j < neighbors.length && countries[i].getMoveableArmies() > 0; j++) {
-                            if (neighbors[j].getOwner() == ID) {
-                                int difference = countries[i].getArmies() - neighbors[j].getArmies();
-                                // So we own a neighbor. Let's see if they have
-                                // more than one army difference:
-                                if (difference > 1) {
-                                    // So we move half the difference:
-                                    board.fortifyArmies(difference / 2, i, neighbors[j].getCode());
-                                    changed = true;
-                                    debug("fort");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else if (fortify == 0x02) {
-            // don't fortify.
-        } // fortifies cluster armies.
-        else if (fortify == 0x03) {
-            if (BoardHelper.playerOwnsAnyPositiveContinent(ID, countries, board)) {
-                int ownCont = getMostValuablePositiveOwnedCont();
-                fortifyCluster(countries[BoardHelper.getCountryInContinent(ownCont, countries)]);
-            } else {
-                Country root = BoardHelper.getPlayersBiggestArmy(ID, countries);
-                fortifyCluster(root);
-            }
-        } // if a continent is owned fortify it, else fortify what you can.
-        else if (fortify == 0x04) {
-            for (int i = 0; i < numContinents; i++) {
-                if (BoardHelper.playerOwnsContinent(ID, i, countries)) {
-                    fortifyContinent(i);
-                } else {
-                    fortifyContinentScraps(i);
-                }
-            }
+            genPop = GeneticAlg2.evolvePopulation(genPop);
         }
-    }
+        Individual2 temp = genPop.getFittest();
+        Byte bestEnemyNeighbors = temp.getGene(3);
+
+        // Now let's calculate the number of enemies of the country
+        // where the armies
+        // already are, to see if they should stay here:
+        int enemyNeighbors = countries[i].getNumberEnemyNeighbors();
+
+        // If there's a better country to move to, move:
+        if (bestEnemyNeighbors > enemyNeighbors) {
+            // Then the armies should move:
+            // So now the country that had the best ratio should be
+            // moved to:
+            board.fortifyArmies(countries[i].getMoveableArmies(), i, countryCodeBestProspect);
+        } // If there are no good places to move to, move to a random
+        // place:
+        else if (enemyNeighbors == 0) {
+            // We choose an int from [0, neighbors.length]:
+            int randCC = rand.nextInt(neighbors.length);
+            board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
+
+        }
+
+    
 
     public String youWon() {
         // For variety we store a bunch of answers and pick one at random to
