@@ -517,11 +517,11 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         //get my armies on this country "us'
         myArmies = numArmies;
         //System.out.println("myArmies " + myArmies);
-        // Get an array of counries touching "us"
+        // Get an array of countries touching "us"
         Country[] nextToMe = us.getAdjoiningList();
-        // Loop through the countries next to me. Hoppfully starting at index zero
+        // Loop through the countries next to me. Hopefully starting at index zero
         for (int i = 0; i < nextToMe.length; i++) {
-            // Make sure that the nextToMe country isnt mine
+            // Make sure that the nextToMe country isn't mine
             if (nextToMe[i].getOwner() != ind.genAgent.ID) {
                 // If it isn't mine get the armies that from country[i
                 //System.out.println("Us is  " + us.getName());
@@ -546,7 +546,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 }
             }
         }
-        //System.out.println("Final Army Vantage Score is :" + moveArmiesScore);
+        System.out.println("Final Army Vantage Score is :" + moveArmiesScore);
         return moveArmiesScore;
     }
 
@@ -572,7 +572,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 int numOfArmiesToPlace = rand.nextInt(ind.genAgent.countries[cca].getArmies());
 
                 System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
-                int bestCountryToMoveArmies = moveArmiesFitness(numOfArmiesToPlace, cca, ind);
+                int bestCountryToMoveArmies = moveArmiesFitness(countries[cca].getArmies(), cca, ind);
                 //byte can only hold so much
                 //if over max then go for move in!
                 try{
@@ -589,6 +589,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         }
         Individual2 temp = genPop.getFittest();
         Byte byteNumArmies = temp.getGene(2);
+        System.out.println("placing this many:"+byteNumArmies);
         // this should never be reached
         System.out.println("Byte is " + byteNumArmies.intValue());
         return byteNumArmies.intValue();
@@ -631,6 +632,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 }
 
             }
+            System.out.println(countryCodeBestProspect);
        return countryCodeBestProspect;
     }
             /*
@@ -668,26 +670,26 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 		// Now let's calculate the number of enemies of the country
 		// where the armies
 		// already are, to see if they should stay here:
-		
-		Country[] neighbors = countries[bestEnemyNeighbors].getAdjoiningList();
-		for (int i = 0; i < neighbors.length; i++) {
-			int enemyNeighbors = countries[i].getNumberEnemyNeighbors();
+			Country[] neighbors = countries[bestEnemyNeighbors].getAdjoiningList();
+			for (int i = 0; i < neighbors.length; i++) {
+				int enemyNeighbors = countries[i].getNumberEnemyNeighbors();
 
-			// If there's a better country to move to, move:
-			if (bestEnemyNeighbors > enemyNeighbors) {
-				// Then the armies should move:
-				// So now the country that had the best ratio should be
-				// moved to:
-				board.fortifyArmies(countries[i].getMoveableArmies(), (int) bestEnemyNeighbors,  neighbors[i].getCode());
-			} // If there are no good places to move to, move to a random
-				// place:
-			else if (enemyNeighbors == 0) {
-				// We choose an int from [0, neighbors.length]:
-				int randCC = rand.nextInt(neighbors.length);
-				board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
+				// If there's a better country to move to, move:
+				if (bestEnemyNeighbors > enemyNeighbors) {
+					// Then the armies should move:
+					// So now the country that had the best ratio should be
+					// moved to:
+					board.fortifyArmies(countries[i].getMoveableArmies(), (int) bestEnemyNeighbors,
+							neighbors[i].getCode());
+				} // If there are no good places to move to, move to a random
+					// place:
+				else if (enemyNeighbors == 0) {
+					// We choose an int from [0, neighbors.length]:
+					int randCC = rand.nextInt(neighbors.length);
+					board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
 
+				}
 			}
-		}
 	}
 
     public String youWon() {
