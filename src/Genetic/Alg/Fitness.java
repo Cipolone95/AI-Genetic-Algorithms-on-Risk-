@@ -1,4 +1,4 @@
-package Genetic.Alg2;
+package Genetic.Alg;
 
 import Genetic.Alg.Individual;
 
@@ -11,7 +11,7 @@ import Genetic.Alg.Individual;
  *  *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
-public class Fitness2 {
+public class Fitness {
     static byte[] solution = new byte[64];
 
     /* Public methods */
@@ -37,7 +37,7 @@ public class Fitness2 {
     }
 
     // Calculate individuals fitness by comparing it to our candidate solution
-    static int getFitness(Individual2 individual) {
+    static int getFitness(Individual individual) {
         int fitness = 0;
         // Loop through our individuals genes and compare them to our cadidates
         for (int i = 0; i < individual.size() && i < solution.length; i++) {

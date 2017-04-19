@@ -1,14 +1,15 @@
 package com.sillysoft.lux.agent;
 
-import Genetic.Alg2.GeneticAlg2;
-import Genetic.Alg2.Individual2;
-import Genetic.Alg2.Population2;
 import com.sillysoft.lux.*;
 import com.sillysoft.lux.util.*;
 
+import Genetic.Alg.GeneticAlg;
+import Genetic.Alg.Individual;
+import Genetic.Alg.Population;
+
 import java.util.Random;
 
-public class GeneticAgent2 extends Pixie implements LuxAgent {
+public class GeneticAgent extends Pixie implements LuxAgent {
 	// This agent's ownerCode:
 
 	protected int ID;
@@ -23,17 +24,17 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	protected Random rand;
 
 	// This will contain the genes of our individual genetic agent.
-	public Individual2 geneticAgent;
+	public Individual geneticAgent;
 	private boolean[] ourConts; // whether we will spend efforts taking/holding
 	// each continent
 
-	public GeneticAgent2() {
+	public GeneticAgent() {
 		rand = new Random();
-		geneticAgent = new Individual2();
+		geneticAgent = new Individual();
 
 	}
 
-	public GeneticAgent2(Board myBoard, Country[] myCountries) {
+	public GeneticAgent(Board myBoard, Country[] myCountries) {
 		board = myBoard;
 		countries = myCountries;
 	}
@@ -41,7 +42,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	/**
 	 * Copy constructor.
 	 */
-	public GeneticAgent2(GeneticAgent2 aGeneticAgent2) {
+	public GeneticAgent(GeneticAgent aGeneticAgent2) {
 		this(aGeneticAgent2.getBoard(), aGeneticAgent2.getCountries());
 		// no defensive copies are created here, since
 		// there are no mutable object fields (String is immutable)
@@ -51,8 +52,8 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * Alternative style for a copy constructor, using a static newInstance
 	 * method.
 	 */
-	public static GeneticAgent2 newInstance(GeneticAgent2 aGeneticAgent2) {
-		return new GeneticAgent2(aGeneticAgent2.getBoard(), aGeneticAgent2.getCountries());
+	public static GeneticAgent newInstance(GeneticAgent aGeneticAgent2) {
+		return new GeneticAgent(aGeneticAgent2.getBoard(), aGeneticAgent2.getCountries());
 	}
 
 	/**
@@ -124,7 +125,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * of countries this individual owns verses the number of countries the
 	 * enemy owns.
 	 */
-	public int territoryScore(GeneticAgent2 ind) {
+	public int territoryScore(GeneticAgent ind) {
 		int territoryScore = ind.countries.length;
 		// holds the number of enemy neighbors next to the country "us"
 		int numEnemyNeighbors = 0;
@@ -154,7 +155,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * Takes in an individual and calculates the fitness dealing with the armies
 	 * owned by this individual verses the armies owned by the enemy.
 	 */
-	public int armyVantageScore(GeneticAgent2 ind) {
+	public int armyVantageScore(GeneticAgent ind) {
 		int armyVantageScore = ind.countries.length;
 
 		// holds the number of enemy neighbors next to the country "us"
@@ -205,7 +206,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * Deploy "placeArmies" uses the fitness score from ArmyVantage and
 	 * Territory score and sends it back for complete deploy fitness score.
 	 */
-	public int getDeployFitness(GeneticAgent2 ind) {
+	public int getDeployFitness(GeneticAgent ind) {
 		return armyVantageScore(ind) + territoryScore(ind);
 	}
 
@@ -218,14 +219,14 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 */
 	public void placeArmies(int numberOfArmies) {
 
-		Population2 genPop = new Population2(25, true);
+		Population genPop = new Population(25, true);
 		for (int j = 0; j < 1; j++) {
 			for (int i = 0; i < genPop.size(); i++) {
 
 				// placeInitialArmies is based of the first gene in the byte
 				// array
 				// for the deploy phase.
-				Individual2 ind = genPop.getIndividual(i);
+				Individual ind = genPop.getIndividual(i);
 				ind.genAgent = this;
 				// places on random countries.
 				int test;
@@ -238,9 +239,9 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 				ind.wantTo = test;
 
 			}
-			genPop = GeneticAlg2.evolvePopulation(genPop);
+			genPop = GeneticAlg.evolvePopulation(genPop);
 		}
-		Individual2 temp = genPop.getFittest();
+		Individual temp = genPop.getFittest();
 		// places armies from most fit individual.
 		this.board.placeArmies(numberOfArmies, temp.wantTo);
 
@@ -306,7 +307,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	/**
 	 * Return fitness for attackphase based on the individual it is sent.
 	 */
-	public int attackFitness(Individual2 ind) {
+	public int attackFitness(Individual ind) {
 		// iterate through enemy countries next to us...find country with lowest
 		// armies and attack it
 		CountryIterator own = new PlayerIterator(ID, countries);
@@ -347,8 +348,8 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 					+ "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 					+ "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 					+ "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			Population2 genPop = new Population2(5, true);
-			Individual2 ind = new Individual2();
+			Population genPop = new Population(5, true);
+			Individual ind = new Individual();
 			for (int j = 0; j < 3; j++) {
 				for (int i = 0; i < genPop.size(); i++) {
 					ind = genPop.getIndividual(i);
@@ -366,9 +367,9 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 					}
 
 				}
-				genPop = GeneticAlg2.evolvePopulation(genPop);
+				genPop = GeneticAlg.evolvePopulation(genPop);
 			}
-			Individual2 temp = genPop.getFittest();
+			Individual temp = genPop.getFittest();
 			temp.genAgent = this;
 
 			CountryIterator own = new PlayerIterator(ID, countries);
@@ -418,7 +419,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * Calculates the fitness for moving armies based on the individual it
 	 * receives.
 	 */
-	public int moveArmiesFitness(int numArmies, int countryId, Individual2 ind) {
+	public int moveArmiesFitness(int numArmies, int countryId, Individual ind) {
 		System.out.println("Begin Move armies Score");
 
 		int moveArmiesScore = 0;
@@ -473,8 +474,8 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 */
 	public int moveArmiesIn(int cca, int ccd) {
 
-		Population2 genPop = new Population2(100, true);
-		Individual2 ind = new Individual2();
+		Population genPop = new Population(100, true);
+		Individual ind = new Individual();
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < genPop.size(); i++) {
 				ind = genPop.getIndividual(i);
@@ -503,9 +504,9 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 				}
 
 			}
-			genPop = GeneticAlg2.evolvePopulation(genPop);
+			genPop = GeneticAlg.evolvePopulation(genPop);
 		}
-		Individual2 temp = genPop.getFittest();
+		Individual temp = genPop.getFittest();
 		Byte byteNumArmies = temp.getGene(2);
 		System.out.println("placing this many:" + byteNumArmies);
 		// this should never be reached
@@ -564,8 +565,8 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 */
 	public void fortifyPhase() {
 
-		Population2 genPop = new Population2(100, true);
-		Individual2 ind = new Individual2();
+		Population genPop = new Population(100, true);
+		Individual ind = new Individual();
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < genPop.size(); i++) {
 				ind = genPop.getIndividual(i);
@@ -580,9 +581,9 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 				Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToFortify));
 				ind.setGene(3, byteScoreForInd);
 			}
-			genPop = GeneticAlg2.evolvePopulation(genPop);
+			genPop = GeneticAlg.evolvePopulation(genPop);
 		}
-		Individual2 temp = genPop.getFittest();
+		Individual temp = genPop.getFittest();
 		Byte bestEnemyNeighbors = temp.getGene(3);
 
 		// Now let's calculate the number of enemies of the country

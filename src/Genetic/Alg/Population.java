@@ -1,4 +1,4 @@
-package Genetic.Alg2;
+package Genetic.Alg;
 
 import Genetic.Alg.Individual;
 
@@ -11,21 +11,21 @@ import Genetic.Alg.Individual;
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
-public class Population2 {
+public class Population {
 
-    Individual2[] individuals;
+    Individual[] individuals;
 
     /*
      * Constructor
      * Create random new population if not initialized
      * If initialized allows changing of population size.
      */
-    public Population2(int populationSize, boolean initialise) {
-        individuals = new Individual2[populationSize];
+    public Population(int populationSize, boolean initialise) {
+        individuals = new Individual[populationSize];
         if(initialise){
             // Loop and create individuals
             for (int i = 0; i < size(); i++) {
-                Individual2 newIndividual = new Individual2();
+                Individual newIndividual = new Individual();
                 newIndividual.generateIndividual();
                 saveIndividual(i, newIndividual);
             }
@@ -37,15 +37,15 @@ public class Population2 {
      * @param index of wanted individual
      * @return individual at this index
      */
-    public Individual2 getIndividual(int index) {
+    public Individual getIndividual(int index) {
         return individuals[index];
     }
 
     /**
      * @return individual that is the fittest in this population
      */
-    public Individual2 getFittest() {
-        Individual2 fittest = individuals[0];
+    public Individual getFittest() {
+        Individual fittest = individuals[0];
         // Loop through individuals to find fittest
         for (int i = 0; i < size(); i++) {
             if (fittest.getFitness() <= getIndividual(i).getFitness()) {
@@ -67,7 +67,7 @@ public class Population2 {
     /**
      * Saves specified individual to specified index in individuals.
      */
-    public void saveIndividual(int index, Individual2 indiv) {
+    public void saveIndividual(int index, Individual indiv) {
         individuals[index] = indiv;
     }
 }

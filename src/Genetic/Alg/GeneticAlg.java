@@ -1,4 +1,4 @@
-package Genetic.Alg2;
+package Genetic.Alg;
 
 import Genetic.Alg.Individual;
 
@@ -8,7 +8,7 @@ import Genetic.Alg.Individual;
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
-public class GeneticAlg2 {
+public class GeneticAlg {
 	
 	//the chance that two chromosomes cross over. Crossover will be split down the middle.
 	static double crossRate = .7;
@@ -22,8 +22,8 @@ public class GeneticAlg2 {
     /* Public methods */
     
     // Evolve a population
-    public static Population2 evolvePopulation(Population2 pop) {
-        Population2 newPopulation = new Population2(pop.size(), false);
+    public static Population evolvePopulation(Population pop) {
+        Population newPopulation = new Population(pop.size(), false);
 
         // Keep our best individual
         if (elitism) {
@@ -40,9 +40,9 @@ public class GeneticAlg2 {
         // Loop over the population size and create new individuals with
         // crossover
         for (int i = elitismOffset; i < pop.size(); i++) {
-            Individual2 indiv1 = tournamentSelection(pop);
-            Individual2 indiv2 = tournamentSelection(pop);
-            Individual2 newIndiv = crossover(indiv1, indiv2);
+            Individual indiv1 = tournamentSelection(pop);
+            Individual indiv2 = tournamentSelection(pop);
+            Individual newIndiv = crossover(indiv1, indiv2);
             newPopulation.saveIndividual(i, newIndiv);
         }
 
@@ -55,8 +55,8 @@ public class GeneticAlg2 {
     }
 
     // Crossover individuals
-    private static Individual2 crossover(Individual2 indiv1, Individual2 indiv2) {
-        Individual2 newSol = new Individual2();
+    private static Individual crossover(Individual indiv1, Individual indiv2) {
+        Individual newSol = new Individual();
         // Loop through genes
         for (int i = 0; i < indiv1.size(); i++) {
             // Crossover
@@ -70,7 +70,7 @@ public class GeneticAlg2 {
     }
 
     // Mutate an individual
-    private static void mutate(Individual2 indiv) {
+    private static void mutate(Individual indiv) {
         // Loop through genes
         for (int i = 0; i < indiv.size(); i++) {
             if (Math.random() <= mutRate) {
@@ -82,16 +82,16 @@ public class GeneticAlg2 {
     }
 
     // Select individuals for crossover
-    private static Individual2 tournamentSelection(Population2 pop) {
+    private static Individual tournamentSelection(Population pop) {
         // Create a tournament population
-        Population2 tournament = new Population2(tournamentSize, false);
+        Population tournament = new Population(tournamentSize, false);
         // For each place in the tournament get a random individual
         for (int i = 0; i < tournamentSize; i++) {
             int randomId = (int) (Math.random() * pop.size());
             tournament.saveIndividual(i, pop.getIndividual(randomId));
         }
         // Get the fittest
-        Individual2 fittest = tournament.getFittest();
+        Individual fittest = tournament.getFittest();
         return fittest;
     }
 }

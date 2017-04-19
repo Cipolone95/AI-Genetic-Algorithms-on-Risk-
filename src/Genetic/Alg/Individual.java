@@ -1,9 +1,9 @@
-package Genetic.Alg2;
+package Genetic.Alg;
 import com.sillysoft.lux.Board;
 import com.sillysoft.lux.Country;
 
 import java.util.Arrays;
-import com.sillysoft.lux.agent.GeneticAgent2;
+import com.sillysoft.lux.agent.GeneticAgent;
 import java.util.Random;
 
 /**
@@ -13,9 +13,9 @@ import java.util.Random;
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
-public class Individual2 {
+public class Individual {
      
-    public GeneticAgent2 genAgent;
+    public GeneticAgent genAgent;
     public int wantTo;
 	//Each phases is 3 bytes in this order; Deploy, attack, fortify.
     static int ChromosomeLength = 6;
@@ -28,11 +28,11 @@ public class Individual2 {
     // Create a random individual
     public void generateIndividual() {
             new Random().nextBytes(genes);
-            genAgent = new GeneticAgent2();
+            genAgent = new GeneticAgent();
     }
 
     public static void main(String[] args){
-    	Individual2 ind = new Individual2();
+    	Individual ind = new Individual();
     	ind.generateIndividual();
     	String s1 = String.format("%8s", Integer.toBinaryString(genes[0] & 0xFF)).replace(' ', '0');
     	System.out.println(s1);
@@ -90,7 +90,7 @@ public class Individual2 {
      */
     public int getFitness() {
         if (fitness == 0) {
-            fitness = Fitness2.getFitness(this);
+            fitness = Fitness.getFitness(this);
         }
         return fitness;
     }
