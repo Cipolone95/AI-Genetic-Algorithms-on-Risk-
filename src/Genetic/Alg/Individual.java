@@ -1,6 +1,10 @@
 package Genetic.Alg;
+import com.sillysoft.lux.Board;
+import com.sillysoft.lux.Country;
+
 import java.util.Arrays;
 import com.sillysoft.lux.agent.GeneticAgent;
+import java.util.Random;
 
 /**
  * This class is used to make an individual to add to the population
@@ -10,23 +14,29 @@ import com.sillysoft.lux.agent.GeneticAgent;
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
  */
 public class Individual {
-
+     
+    public GeneticAgent genAgent;
+    public int wantTo;
 	//Each phases is 3 bytes in this order; Deploy, attack, fortify.
-	static int ChromosomeLength = 6;
+    static int ChromosomeLength = 6;
     
-    private byte[] genes = new byte[ChromosomeLength];
+    private static byte[] genes = new byte[ChromosomeLength];
     //relative fitness of this individual
     //we will have to come up with a scale
     private int fitness = 0;
 
     // Create a random individual
     public void generateIndividual() {
-        for (int i = 0; i < size(); i++) {
-            byte gene = (byte) Math.round(Math.random());
-            genes[i] = gene;
-        }
+            new Random().nextBytes(genes);
+            genAgent = new GeneticAgent();
     }
 
+    public static void main(String[] args){
+    	Individual ind = new Individual();
+    	ind.generateIndividual();
+    	String s1 = String.format("%8s", Integer.toBinaryString(genes[0] & 0xFF)).replace(' ', '0');
+    	System.out.println(s1);
+    }
     
     /**
      * returns byte from specified index.
@@ -78,9 +88,9 @@ public class Individual {
     /**
      * returns fitness value of this individual.
      */
-    public int getFitness(GeneticAgent ind) {
+    public int getFitness() {
         if (fitness == 0) {
-            fitness = Fitness.getFitness(ind);
+            fitness = Fitness.getFitness(this);
         }
         return fitness;
     }
