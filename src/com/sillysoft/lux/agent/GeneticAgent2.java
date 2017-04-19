@@ -125,6 +125,11 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         cashCardsIfPossible(cards);
     }
 
+    /**
+     * Takes in an individual and calculates its fitness dealing
+     * with the number of countries this individual owns verses the number of countries
+     * the enemy owns.
+     */
     public int territoryScore(GeneticAgent2 ind) {
         //System.out.println("Begin Territory Vantage Score");
         int territoryScore = ind.countries.length;
@@ -136,14 +141,15 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
             Country us = own.next();
             numEnemyNeighbors = us.getNumberEnemyNeighbors();
             // territoryScore will be less then one 
-            if (numEnemyNeighbors != 0) {
+            if (numEnemyNeighbors != 0 ) {
                 if (1 - numEnemyNeighbors >= 0) {
                     territoryScore = territoryScore + (1 - numEnemyNeighbors);
 
                 }
             } else {
-                territoryScore = territoryScore + (1 - numEnemyNeighbors);
-                ;
+                //territoryScore = territoryScore + (1 - numEnemyNeighbors);
+            	//bad to place armies in a country surrounded by friendly countries.
+            	territoryScore = -10;
             }
             count++;
         }
@@ -151,6 +157,10 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         return territoryScore;
     }
 
+    /**
+     * Takes in an individual and calculates the fitness dealing with
+     * the armies owned by this individual verses the armies owned by the enemy.
+     */
     public int armyVantageScore(GeneticAgent2 ind) {
         //System.out.println("Begin Army Vantage Score");
         int armyVantageScore = ind.countries.length;
@@ -164,11 +174,11 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
             //get my armies on this country "us'
             myArmies = us.getArmies();
             //System.out.println("myArmies " + myArmies);
-            // Get an array of counries touching "us"
+            // Get an array of countries touching "us"
             Country[] nextToMe = us.getAdjoiningList();
-            // Loop through the countries next to me. Hoppfully starting at index zero
+            // Loop through the countries next to me. Hopefully starting at index zero
             for (int i = 0; i < nextToMe.length; i++) {
-                // Make sure that the nextToMe country isnt mine
+                // Make sure that the nextToMe country isn't mine
                 if (nextToMe[i].getOwner() != ind.ID) {
                     // If it isn't mine get the armies that from country[i
                     //System.out.println("Us is  " + us.getName());
@@ -198,8 +208,11 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         return armyVantageScore;
     }
 
+    /**
+     * 
+     */
     public int getDeployFitness(GeneticAgent2 ind) {
-        return armyVantageScore(ind);
+        return armyVantageScore(ind) + territoryScore(ind);
     }
 
     /*
@@ -438,8 +451,16 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                     ind.genAgent = this;
                     //System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
                     int bestCountryToAttack = attackFitness(ind);
-                    Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToAttack));
-                    ind.setGene(1, byteScoreForInd);
+                    
+                    //byte can only hold so much
+                    //if over max then go for attack!
+                    try{
+                    	Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToAttack));
+                    	ind.setGene(1, byteScoreForInd);
+                    }catch(NumberFormatException E){
+                    	ind.setGene(1, (byte)127);
+                    }
+                    
                 }
                 genPop = GeneticAlg2.evolvePopulation(genPop);
             }
@@ -496,11 +517,11 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         //get my armies on this country "us'
         myArmies = numArmies;
         //System.out.println("myArmies " + myArmies);
-        // Get an array of counries touching "us"
+        // Get an array of countries touching "us"
         Country[] nextToMe = us.getAdjoiningList();
-        // Loop through the countries next to me. Hoppfully starting at index zero
+        // Loop through the countries next to me. Hopefully starting at index zero
         for (int i = 0; i < nextToMe.length; i++) {
-            // Make sure that the nextToMe country isnt mine
+            // Make sure that the nextToMe country isn't mine
             if (nextToMe[i].getOwner() != ind.genAgent.ID) {
                 // If it isn't mine get the armies that from country[i
                 //System.out.println("Us is  " + us.getName());
@@ -516,16 +537,17 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 // if myArmies/numEnemyNeighbors is great than 1 that means my enemies have less armies 
                 // on adjoining countries and my fitness is good
                 int solution = (myArmies - numEnemyArmies);
-                //System.out.println("Solution" + solution);
+                System.out.println("Solution on line 540 in GA2 " + solution);
                 if (solution >= 0) {
                     moveArmiesScore = moveArmiesScore + solution;
                 } else {
                     // Solution is negative so it will subtract even though it is adding
                     moveArmiesScore = moveArmiesScore + solution;
                 }
+                
             }
         }
-        //System.out.println("Final Army Vantage Score is :" + moveArmiesScore);
+        System.out.println("Final Army Vantage Score is :" + moveArmiesScore);
         return moveArmiesScore;
     }
 
@@ -546,19 +568,35 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 ind.genAgent = this;
                 System.out.println("Individual :" + i + " " + ind);
                 //   placed on countries we already own
-                int test;
+                int test; //Do we need this variable? It doesn't do anything 
 
-                int numOfArmiesToPlace = rand.nextInt(ind.genAgent.countries[cca].getArmies());
+                
+                //TESTING THINGS HERE
+                //int numOfArmiesToPlace = rand.nextInt(ind.genAgent.countries[cca].getArmies());
+                int totalArmiesInCountry = ind.genAgent.countries[cca].getArmies();
+                int numOfArmiesToPlace = totalArmiesInCountry - 1; 
 
                 System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
-                int bestCountryToMoveArmies = moveArmiesFitness(numOfArmiesToPlace, cca, ind);
-                Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToMoveArmies));
-                ind.setGene(2, byteScoreForInd);
+                int bestCountryToMoveArmies = moveArmiesFitness(countries[cca].getArmies(), cca, ind);
+                //byte can only hold so much
+                //if over max then go for move in!
+                try{
+                	Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToMoveArmies));
+                	Byte byteNumOfArmies = Byte.valueOf(Integer.toString(numOfArmiesToPlace)); //Test work 
+                	ind.setGene(1, byteScoreForInd);
+                	ind.setGene(2, byteNumOfArmies); //was originally byteScoreForInd
+                }catch(NumberFormatException E){
+                	ind.setGene(1, (byte)127);
+                	ind.setGene(2, (byte)127);
+                	
+                }
+                
             }
             genPop = GeneticAlg2.evolvePopulation(genPop);
         }
         Individual2 temp = genPop.getFittest();
         Byte byteNumArmies = temp.getGene(2);
+        System.out.println("placing this many:"+byteNumArmies);
         // this should never be reached
         System.out.println("Byte is " + byteNumArmies.intValue());
         return byteNumArmies.intValue();
@@ -566,7 +604,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 
     public int fortifyFitness(int countryID) {
 
-
+    	int countryCodeBestProspect = -1;
             if (countries[countryID].getOwner() == ID && countries[countryID].getMoveableArmies() > 0) {
                 // This means we've found a country of ours that we can move
                 // from if we want to.
@@ -584,7 +622,6 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 // array.
                 // Let's use the array...
                 Country[] neighbors = countries[countryID].getAdjoiningList();
-                int countryCodeBestProspect = -1;
                 int bestEnemyNeighbors = 0;
                 int enemyNeighbors = 0;
 
@@ -602,7 +639,8 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 }
 
             }
-        return 0;
+            System.out.println(countryCodeBestProspect);
+       return countryCodeBestProspect;
     }
             /*
 	 * The fortifyPhase will be based off of the fortify 1st gene in the
@@ -629,34 +667,37 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
                 int bestCountryToFortify = fortifyFitness(randCountry);
                 Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToFortify));
-                ind.setGene(2, byteScoreForInd);
+                ind.setGene(3, byteScoreForInd);
             }
             genPop = GeneticAlg2.evolvePopulation(genPop);
         }
         Individual2 temp = genPop.getFittest();
-        Byte bestEnemyNeighbors = temp.getGene(3);
+		Byte bestEnemyNeighbors = temp.getGene(3);
 
-        // Now let's calculate the number of enemies of the country
-        // where the armies
-        // already are, to see if they should stay here:
-        int enemyNeighbors = countries[i].getNumberEnemyNeighbors();
+		// Now let's calculate the number of enemies of the country
+		// where the armies
+		// already are, to see if they should stay here:
+			Country[] neighbors = countries[bestEnemyNeighbors].getAdjoiningList();
+			for (int i = 0; i < neighbors.length; i++) {
+				int enemyNeighbors = countries[i].getNumberEnemyNeighbors();
 
-        // If there's a better country to move to, move:
-        if (bestEnemyNeighbors > enemyNeighbors) {
-            // Then the armies should move:
-            // So now the country that had the best ratio should be
-            // moved to:
-            board.fortifyArmies(countries[i].getMoveableArmies(), i, countryCodeBestProspect);
-        } // If there are no good places to move to, move to a random
-        // place:
-        else if (enemyNeighbors == 0) {
-            // We choose an int from [0, neighbors.length]:
-            int randCC = rand.nextInt(neighbors.length);
-            board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
+				// If there's a better country to move to, move:
+				if (bestEnemyNeighbors > enemyNeighbors) {
+					// Then the armies should move:
+					// So now the country that had the best ratio should be
+					// moved to:
+					board.fortifyArmies(countries[i].getMoveableArmies(), (int) bestEnemyNeighbors,
+							neighbors[i].getCode());
+				} // If there are no good places to move to, move to a random
+					// place:
+				else if (enemyNeighbors == 0) {
+					// We choose an int from [0, neighbors.length]:
+					int randCC = rand.nextInt(neighbors.length);
+					board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
 
-        }
-
-    
+				}
+			}
+	}
 
     public String youWon() {
         // For variety we store a bunch of answers and pick one at random to
