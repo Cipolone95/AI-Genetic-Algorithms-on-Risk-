@@ -13,6 +13,8 @@ import java.util.List;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +27,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
     // used by some genes as indication to expand.
     protected int expando;
     protected int expandTo;
+    protected int countryToAttack;
     // Store some refs the board and to the country array
     protected Board board;
     protected Country[] countries;
@@ -40,6 +43,36 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         rand = new Random();
         geneticAgent = new Individual2();
 
+    }
+
+    public GeneticAgent2(Board myBoard, Country[] myCountries) {
+        board = myBoard;
+        countries = myCountries;
+    }
+
+    /**
+     * Copy constructor.
+     */
+    public GeneticAgent2(GeneticAgent2 aGeneticAgent2) {
+        this(aGeneticAgent2.getBoard(), aGeneticAgent2.getCountries());
+        //no defensive copies are created here, since 
+        //there are no mutable object fields (String is immutable)
+    }
+
+    /**
+     * Alternative style for a copy constructor, using a static newInstance
+     * method.
+     */
+    public static GeneticAgent2 newInstance(GeneticAgent2 aGeneticAgent2) {
+        return new GeneticAgent2(aGeneticAgent2.getBoard(), aGeneticAgent2.getCountries());
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public Country[] getCountries() {
+        return countries;
     }
 
     // Save references
@@ -92,59 +125,68 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         cashCardsIfPossible(cards);
     }
 
-    public int territoryScore(Individual2 ind) {
-        System.out.println("Begin Territory Vantage Score");
-        int territoryScore = 0;
+    /**
+     * Takes in an individual and calculates its fitness dealing
+     * with the number of countries this individual owns verses the number of countries
+     * the enemy owns.
+     */
+    public int territoryScore(GeneticAgent2 ind) {
+        //System.out.println("Begin Territory Vantage Score");
+        int territoryScore = ind.countries.length;
         //holds the number of enemy neighbors next to the country "us"
         int numEnemyNeighbors = 0;
         int count = 0;
-        CountryIterator own = new PlayerIterator(ind.genAgent.ID, ind.genAgent. countries);
+        CountryIterator own = new PlayerIterator(ind.ID, ind.countries);
         while (own.hasNext()) {
-        System.out.println("Count is " + count);
             Country us = own.next();
             numEnemyNeighbors = us.getNumberEnemyNeighbors();
-            System.out.println("NumEnemyNeighbors :" + numEnemyNeighbors);
             // territoryScore will be less then one 
-            if (numEnemyNeighbors != 0) {
-            System.out.println("Conditional :" + Math.round(1 / numEnemyNeighbors));
-                if (Math.round(1 / numEnemyNeighbors) == 1) {
-                    territoryScore++;
-                    
+            if (numEnemyNeighbors != 0 ) {
+                if (1 - numEnemyNeighbors >= 0) {
+                    territoryScore = territoryScore + (1 - numEnemyNeighbors);
+
                 }
             } else {
-                territoryScore++;
+                //territoryScore = territoryScore + (1 - numEnemyNeighbors);
+            	//bad to place armies in a country surrounded by friendly countries.
+            	territoryScore = -10;
             }
-            System.out.println("Territory Score at itetion :" + count + " is " + territoryScore);
             count++;
         }
-        System.out.println("Final Territory Vantage Score is :" + territoryScore);
+        //System.out.println("Final Territory Vantage Score is :" + territoryScore);
         return territoryScore;
     }
 
-    public int armyVantageScore(Individual2 ind) {
-        System.out.println("Begin Army Vantage "
-        		+ "Score");
-        int armyVantageScore = 0;
+    /**
+     * Takes in an individual and calculates the fitness dealing with
+     * the armies owned by this individual verses the armies owned by the enemy.
+     */
+    public int armyVantageScore(GeneticAgent2 ind) {
+        //System.out.println("Begin Army Vantage Score");
+        int armyVantageScore = ind.countries.length;
+
         //holds the number of enemy neighbors next to the country "us"
-        double myArmies = 0;
-        int count = 0;
-        CountryIterator own = new PlayerIterator(ind.genAgent.ID, ind.genAgent.countries);
+        int myArmies = 0;
+        CountryIterator own = new PlayerIterator(ind.ID, ind.countries);
         while (own.hasNext()) {
-            double numEnemyArmies = 0;
+            int numEnemyArmies = 0;
             Country us = own.next();
             //get my armies on this country "us'
             myArmies = us.getArmies();
-            System.out.println("My Armies :" + myArmies);
-            // Get an array of counries touching "us"
+            //System.out.println("myArmies " + myArmies);
+            // Get an array of countries touching "us"
             Country[] nextToMe = us.getAdjoiningList();
-            System.out.println("Next to me :" + nextToMe);
-            // Loop through the countries next to me. Hoppfully starting at index zero
+            // Loop through the countries next to me. Hopefully starting at index zero
             for (int i = 0; i < nextToMe.length; i++) {
-                // Make sure that the nextToMe country isnt mine
-                if (nextToMe[i].getOwner() != ind.genAgent.ID) {
-                    // If it isn't mine get the armies that from country[i]
-                    System.out.println("NumEnemyArmies are :" + numEnemyArmies + " and for loop iteration is " + i);
-                    numEnemyArmies += BoardHelper.getPlayerArmies(nextToMe[i].getOwner(), nextToMe);
+                // Make sure that the nextToMe country isn't mine
+                if (nextToMe[i].getOwner() != ind.ID) {
+                    // If it isn't mine get the armies that from country[i
+                    //System.out.println("Us is  " + us.getName());
+                    //System.out.println("Next to  " + nextToMe[i].getName());
+                    //System.out.println("Armies next to  " + nextToMe[i].getArmies());
+                    numEnemyArmies += nextToMe[i].getArmies();
+                    //System.out.println("numEnemyArmies " + numEnemyArmies);
+
                 }
             }
             if (numEnemyArmies != 0) {
@@ -152,23 +194,24 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 // on adjoining countries and my fitness is bad
                 // if myArmies/numEnemyNeighbors is great than 1 that means my enemies have less armies 
                 // on adjoining countries and my fitness is good
-                double solution = myArmies / numEnemyArmies;
-                System.out.println("My Armies :" + myArmies);
-                System.out.println("My armies div Num Enemy is :" + solution);
-                if (solution > 1) {
-                    armyVantageScore++;
+                int solution = (myArmies - numEnemyArmies);
+                //System.out.println("Solution" + solution);
+                if (solution >= 0) {
+                    armyVantageScore = solution;
+                } else {
+                    // Solution is negative so it will subtract even though it is adding
+                    armyVantageScore = 0;
                 }
-            } else {
-                armyVantageScore++;
             }
-            System.out.println("Army Vantage Score is :" + armyVantageScore + " at iteration " + count);
-            count++;
         }
-        System.out.println("Final Army Vantage Score is :" + armyVantageScore);
+        //System.out.println("Final Army Vantage Score is :" + armyVantageScore);
         return armyVantageScore;
     }
 
-    public int getDeployFitness(Individual2 ind) {
+    /**
+     * 
+     */
+    public int getDeployFitness(GeneticAgent2 ind) {
         return armyVantageScore(ind) + territoryScore(ind);
     }
 
@@ -179,43 +222,45 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * @see com.sillysoft.lux.agent.Pixie#placeArmies(int)
      */
     public void placeArmies(int numberOfArmies) {
-        System.out.println("SetPrefs");
         /*byte[] deployGene = new byte[1];
         //holds the terrioty advantage score
         int totalVantageScore = getDeployFitness(this.geneticAgent);
         Byte byteScore = Byte.valueOf(Integer.toString(totalVantageScore));
         geneticAgent.setGene(0, byteScore);
-        */
-        Population2 genPop = new Population2(100, true);
-        for (int j = 0; j < 3; j++) {
+         */
+        Population2 genPop = new Population2(25, true);
+        for (int j = 0; j < 1; j++) {
             for (int i = 0; i < genPop.size(); i++) {
-                    // placeInitialArmies is based of the first gene in the byte array
-                    // for the deploy phase.
-                    Individual2 ind = genPop.getIndividual(i);
-                    ind.genAgent = this;
-                    System.out.println("Individual :" + i + " " + ind);
-                    //   places on random countries.
-                    int test;
-                    do {
-                        test = rand.nextInt(ind.genAgent.countries.length);
-                    } while (ind.genAgent.countries[test].getOwner() != ind.genAgent.ID || ind.genAgent.countries[test].getWeakestEnemyNeighbor() == null);
-                    
-                    ind.genAgent.board.placeArmies(numberOfArmies, test);
-                    ind.wantTo = test;
-                    System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
-                    int totalVantageScoreForInd = getDeployFitness(ind);
-                    System.out.println(totalVantageScoreForInd);
-                    System.out.println("Individual :" + i + " " + ind);
-                    Byte byteScoreForInd = Byte.valueOf(Integer.toString(totalVantageScoreForInd));
-                    ind.setGene(0, byteScoreForInd);
+                //GeneticAgent2 tempAgent = new GeneticAgent2(board,countries);
+                // placeInitialArmies is based of the first gene in the byte array
+                // for the deploy phase.
+                Individual2 ind = genPop.getIndividual(i);
+                ind.genAgent = this;
+                //   places on random countries.
+                int test;
+                do {
+                    test = rand.nextInt(ind.genAgent.countries.length);
+                } while (ind.genAgent.countries[test].getOwner() != ind.genAgent.ID || ind.genAgent.countries[test].getWeakestEnemyNeighbor() == null);
+
+                ind.genAgent.board.placeArmies(numberOfArmies, test);
+                ind.wantTo = test;
+                //System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
+                //System.out.println("Country place " + countries[test].getName());
+                int totalVantageScoreForInd = getDeployFitness(ind.genAgent);
+                //System.out.println("Fitness Score for ind " + i + " and is " + j + " generation");
+                //System.out.println("Total " + totalVantageScoreForInd);
+                //System.out.println(totalVantageScoreForInd);
+                String whatever = Integer.toBinaryString(totalVantageScoreForInd);
+                //System.out.println("Whatever " + whatever);
+                //ind.setGene(0, totalVantageScoreForInd);
             }
             genPop = GeneticAlg2.evolvePopulation(genPop);
         }
         Individual2 temp = genPop.getFittest();
         //int totalVantageScoreForInd = getDeployFitness(temp);
-        System.out.println("Recieved fittest");
-        System.out.println(temp.getFitness());
-        System.out.println(temp);
+        //System.out.println("Recieved fittest");
+        //System.out.println(temp.getFitness());
+        //System.out.println(temp);
         this.board.placeArmies(numberOfArmies, temp.wantTo);
 
     }
@@ -348,6 +393,35 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         }
     }
 
+    //attackFitnessMethodGoesHere
+    public int attackFitness(Individual2 ind) {
+        //iterate through enemy countries next to us...find country with lowest armies and attack it
+        CountryIterator own = new PlayerIterator(ID, countries);
+
+        int maxArmyDifference = 0;
+        int count = 0;
+        while (own.hasNext()) {
+            System.out.println("Next");
+            Country us = own.next();
+            // Get an array of countries touching "us"
+            Country[] nextToMe = us.getAdjoiningList();
+            for (int i = 0; i < nextToMe.length; i++) {
+                Country neighbor = nextToMe[i];
+                if (neighbor.getOwner() != us.getOwner()) {
+                    int armyDifference = us.getArmies() - neighbor.getArmies();
+                    if (armyDifference > maxArmyDifference) {
+                        maxArmyDifference = armyDifference;
+                        System.out.println("US" + us.getName() + us.getArmies() + " and them" + neighbor.getName() + neighbor.getArmies());
+                        System.out.println("max army diff " + maxArmyDifference);
+                        ind.genAgent.countryToAttack = neighbor.getCode();
+                    }
+                }
+            }
+            count++;
+        }
+        return maxArmyDifference;
+    }
+
     /*
 	 * Attack based on attack phases first gene Gene uses only up to 0x07 so
 	 * 0000 0111 over 7 is unused. (non-Javadoc)
@@ -356,135 +430,124 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
      */
     public void attackPhase() {
 
-        byte attack = (geneticAgent.getPhase("attack"))[0];
-        //byte attack = 0x01;
+        /*byte[] deployGene = new byte[1];
+        //holds the terrioty advantage score
+        int totalVantageScore = getDeployFitness(this.geneticAgent);
+        Byte byteScore = Byte.valueOf(Integer.toString(totalVantageScore));
+        geneticAgent.setGene(0, byteScore);
+         */
+        boolean attack = true;
+        int count = 0;
+        while (count < 10) {
+            System.out.println("Attacking " + count + " times!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Population2 genPop = new Population2(5, true);
+            Individual2 ind = new Individual2();
+            for (int j = 0; j < 3; j++) {
+                for (int i = 0; i < genPop.size(); i++) {
+                    ind = genPop.getIndividual(i);
+                    ind.genAgent = this;
+                    //System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
+                    int bestCountryToAttack = attackFitness(ind);
+                    
+                    //byte can only hold so much
+                    //if over max then go for attack!
+                    try{
+                    	Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToAttack));
+                    	ind.setGene(1, byteScoreForInd);
+                    }catch(NumberFormatException E){
+                    	ind.setGene(1, (byte)127);
+                    }
+                    
+                }
+                genPop = GeneticAlg2.evolvePopulation(genPop);
+            }
+            Individual2 temp = genPop.getFittest();
+            temp.genAgent = this;
+            //System.out.println("Cond for attack" + (temp.getGene(1) > 1));
 
-        // attack as much as possible
-        if (attack == 0x01) {
-            // Keep cycling until we make no attacks
-            boolean madeAttack = true;
-            while (madeAttack) {
-                madeAttack = false; // reset it. if we win an attack somewhere
-                // we set it to true.
+            CountryIterator own = new PlayerIterator(ID, countries);
 
-                // cycle through all of the countries that we have 2 or more
-                // armies on
-                CountryIterator armies = new ArmiesIterator(ID, 2, countries);
-                while (armies.hasNext()) {
-                    Country us = armies.next();
-
-                    // Find its weakest neighbor
-                    Country weakestNeighbor = us.getWeakestEnemyNeighbor();
-
-                    // So we have found the best matchup for Country <us>. (if
-                    // there are any enemies)
-                    // will only attack if it is a good-chance of winning.
-                    if (weakestNeighbor != null && us.getArmies() > weakestNeighbor.getArmies()) {
-                        // will always attack till death.
-                        board.attack(us, weakestNeighbor, true);
-
-                        // Set madeAttack to true, so that we loop through all
-                        // our armies again
-                        madeAttack = true;
+            boolean looking = true;
+            Country cca = null;
+            Country ccd = null;
+            while (looking && own.hasNext()) {
+                //System.out.println("Iterating");
+                Country us = own.next();
+                // Get an array of countries touching "us"
+                if (us.getArmies() != 1) {
+                    Country[] nextToMe = us.getAdjoiningList();
+                    for (int i = 0; i < nextToMe.length; i++) {
+                        Country neighbor = nextToMe[i];
+                        System.out.println("Neig code " + neighbor.getCode() + " Country name is " + neighbor.getName());
+                        System.out.println("Temp agent attack id " + temp.genAgent.countryToAttack);
+                        System.out.println("Neighbor id" + neighbor.getOwner());
+                        System.out.println("us ownder + " + us.getOwner() + " with country name " + us.getName());
+                        if (neighbor.getCode() == temp.genAgent.countryToAttack && neighbor.getOwner() != us.getOwner()) {
+                            cca = us;
+                            ccd = neighbor;
+                            System.out.println("us " + cca);
+                            System.out.println("them " + ccd);
+                            looking = false;
+                        }
                     }
                 }
             }
-        } // look for weak countries to overtake.
-        else if (attack == 0x02) {
-
-            if (expando == -1) {
-                return; // nowhere to go
+            if (cca != null || ccd != null) {
+                startAttack(cca, ccd);
             }
-            // Now we see if we have a good chance of taking the weakest link
-            // over:
-            if (expandTo != -1 && countries[expando].getArmies() > countries[expandTo].getArmies()) {
-                // We attack till dead, with max dice:
-                board.attack(expando, expandTo, true);
-            }
-
-            attackHogWild();
-            attackStalemate();
-        } // attack amount depending on armies size.
-        else if (attack == 0x03) {
-            attackPhase(true);
-
-            // If we have tons of armies then attack more
-            if (BoardHelper.getPlayerArmies(ID, countries) > 300) {
-                while (attackPhase(false)) {
-                }
-            }
-        } // expand in cluster looking for easy expansions
-        else if (attack == 0x04) {
-            if (BoardHelper.playerOwnsAnyPositiveContinent(ID, countries, board)) {
-                int ownCont = getMostValuablePositiveOwnedCont();
-                Country root = countries[BoardHelper.getCountryInContinent(ownCont, countries)];
-                attackFromCluster(root);
-            } else {
-                // get our biggest army group:
-                Country root = BoardHelper.getPlayersBiggestArmy(ID, countries);
-                attackFromCluster(root);
-            }
-
-            attackHogWild(); // this only does anything if we outnumber everyone
-            attackStalemate();
-        } // will attack and try to get a card
-        else if (attack == 0x05) {
-            for (int i = 0; i < numContinents; i++) {
-                if (ourConts[i]) {
-                    attackInContinent(i);
-                }
-            }
-
-            attackForCard();
-            attackHogWild();
-            attackStalemate();
-        } // attack to kill a player.
-        else if (attack == 0x06) {
-            if (mustKillPlayer != -1) {
-                // do our best to take out this guy
-                attackToKillPlayer(mustKillPlayer);
-            }
-
-            // but do other attacks also...
-            if (BoardHelper.playerOwnsAnyPositiveContinent(ID, countries, board)) {
-                int ownCont = getMostValuablePositiveOwnedCont();
-                Country root = countries[BoardHelper.getCountryInContinent(ownCont, countries)];
-                attackFromCluster(root);
-            } else {
-                // get our biggest army group:
-                Country root = BoardHelper.getPlayersBiggestArmy(ID, countries);
-                attackFromCluster(root);
-            }
-
-            attackForCard();
-            attackHogWild();
-            attackStalemate();
-        } // looks for continent take over attacks
-        else if (attack == 0x07) {
-            if (mustKillPlayer != -1) {
-                // do our best to take out this guy
-                attackToKillPlayer(mustKillPlayer);
-            }
-
-            for (int i = 0; i < numContinents; i++) {
-                if (ourConts[i]) {
-                    attackInContinent(i);
-                }
-                takeOutContinentCheck(i);
-            }
-
-            int numPlayers = board.getNumberOfPlayers();
-            for (int p = 0; p < numPlayers; p++) {
-                if (p != ID) {
-                    takeOutPlayerCheck(p);
-                }
-            }
-
-            // Only attack for a card if we outnumber someone 5:1
-            attackForCard(5);
-            attackHogWild();
-            attackStalemate();
+            count++;
         }
+    }
+
+    public void startAttack(Country us, Country neighbor) {
+        board.attack(us, neighbor, true);
+    }
+
+    public int moveArmiesFitness(int numArmies, int countryId, Individual2 ind) {
+        System.out.println("Begin Move armies Score");
+
+        int moveArmiesScore = 0;
+        //holds the number of enemy neighbors next to the country "us"
+        int myArmies = 0;
+        int numEnemyArmies = 0;
+        Country us = ind.genAgent.countries[countryId];
+        //get my armies on this country "us'
+        myArmies = numArmies;
+        //System.out.println("myArmies " + myArmies);
+        // Get an array of counries touching "us"
+        Country[] nextToMe = us.getAdjoiningList();
+        // Loop through the countries next to me. Hoppfully starting at index zero
+        for (int i = 0; i < nextToMe.length; i++) {
+            // Make sure that the nextToMe country isnt mine
+            if (nextToMe[i].getOwner() != ind.genAgent.ID) {
+                // If it isn't mine get the armies that from country[i
+                //System.out.println("Us is  " + us.getName());
+                //System.out.println("Next to  " + nextToMe[i].getName());
+                //System.out.println("Armies next to  " + nextToMe[i].getArmies());
+                numEnemyArmies += nextToMe[i].getArmies();
+                //System.out.println("numEnemyArmies " + numEnemyArmies);
+
+            }
+            if (numEnemyArmies != 0) {
+                // if myArmies/numEnemyNeighbors is less than 1 that means my enemies have more armies 
+                // on adjoining countries and my fitness is bad
+                // if myArmies/numEnemyNeighbors is great than 1 that means my enemies have less armies 
+                // on adjoining countries and my fitness is good
+                int solution = (myArmies - numEnemyArmies);
+                //System.out.println("Solution" + solution);
+                if (solution >= 0) {
+                    moveArmiesScore = moveArmiesScore + solution;
+                } else {
+                    // Solution is negative so it will subtract even though it is adding
+                    moveArmiesScore = moveArmiesScore + solution;
+                }
+            }
+        }
+        //System.out.println("Final Army Vantage Score is :" + moveArmiesScore);
+        return moveArmiesScore;
     }
 
     /*
@@ -495,133 +558,83 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * @see com.sillysoft.lux.agent.Pixie#moveArmiesIn(int, int)
      */
     public int moveArmiesIn(int cca, int ccd) {
-        byte reOccupy = (geneticAgent.getPhase("attack"))[1];
 
-        if (reOccupy == 0x00) {
-            // moves armies into countries with more enemies.
-            int Aenemies = countries[cca].getNumberEnemyNeighbors();
-            int Denemies = countries[ccd].getNumberEnemyNeighbors();
+        Population2 genPop = new Population2(100, true);
+        Individual2 ind = new Individual2();
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < genPop.size(); i++) {
+                ind = genPop.getIndividual(i);
+                ind.genAgent = this;
+                System.out.println("Individual :" + i + " " + ind);
+                //   placed on countries we already own
+                int test;
 
-            // If the attacking country had more enemies, then we leave all
-            // possible
-            // armies in the country they attacked from (thus we move in 0):
-            if (Aenemies > Denemies) {
-                return 0;
-            }
+                int numOfArmiesToPlace = rand.nextInt(ind.genAgent.countries[cca].getArmies());
 
-            // Otherwise the defending country has more neighboring enemies,
-            // move in everyone:
-            return countries[cca].getArmies() - 1;
-        } // divides armies evenly between the two countries
-        else if (reOccupy == 0x01) {
-            int totalArmies = countries[cca].getArmies();
-
-            return ((totalArmies + 1) / 2);
-        } // looks to place armies next to weak countries
-        else if (reOccupy == 0x02) {
-            Country attackWeak = countries[cca].getWeakestEnemyNeighbor();
-            Country defendWeak = countries[ccd].getWeakestEnemyNeighbor();
-
-            if (attackWeak == null) {
-                return 1000000;
-            }
-            if (defendWeak == null) {
-                return 0;
-            }
-
-            if (attackWeak.getArmies() < defendWeak.getArmies()) {
-                return 0;
-            }
-
-            return 1000000;
-        } // cluster armies
-        else if (reOccupy == 0x03) {
-            int test = obviousMoveArmiesInTest(cca, ccd);
-            if (test != -1) {
-                return test;
-            }
-
-            test = memoryMoveArmiesInTest(cca, ccd);
-            if (test != -1) {
-                return test;
-            }
-
-            Country aweakest = countries[cca].getWeakestEnemyNeighborInContinent(goalCont);
-            Country dweakest = countries[ccd].getWeakestEnemyNeighborInContinent(goalCont);
-
-            if (dweakest == null || (aweakest != null && aweakest.getArmies() < dweakest.getArmies())) // attacking country has a weaker neighbor. leave armies there
-            {
-                return 0;
-            }
-
-            return 1000000;
-        } // tries to move armies into a more advantages position
-        else if (reOccupy == 0x04) {
-            // test if they border any enemies at all:
-            int attackerEnemies = countries[cca].getNumberEnemyNeighbors();
-            int defenderEnemies = countries[ccd].getNumberEnemyNeighbors();
-
-            if (attackerEnemies > defenderEnemies) {
-                return 0;
-            } else if (defenderEnemies > attackerEnemies) {
-                return 1000000;
-            } else if (attackerEnemies > 0) // then they are tied at above 0
-            {
-                return countries[cca].getArmies() / 2;
-            }
-
-            // move our armies into continents that we want.
-            if (ourConts[countries[cca].getContinent()] && ourConts[countries[ccd].getContinent()]) { // we
-                // want
-                // both
-                return countries[cca].getArmies() / 2;
-            } else if (ourConts[countries[cca].getContinent()]) {
-                return 0; // leave them in attacker
-            } else if (ourConts[countries[ccd].getContinent()]) {
-                return 1000000; // send to defender
-            }
-
-            // so now we want none of them
-            // see if either of them border something we want
-            int attackerEnemiesWanted = 0, defenderEnemiesWanted = 0;
-            CountryIterator e = new NeighborIterator(countries[cca]);
-            while (e.hasNext()) {
-                Country test = e.next();
-                if (test.getOwner() != ID && ourConts[test.getContinent()]) {
-                    attackerEnemiesWanted++;
+                System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
+                int bestCountryToMoveArmies = moveArmiesFitness(numOfArmiesToPlace, cca, ind);
+                //byte can only hold so much
+                //if over max then go for move in!
+                try{
+                	Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToMoveArmies));
+                	ind.setGene(1, byteScoreForInd);
+                	ind.setGene(2, byteScoreForInd);
+                }catch(NumberFormatException E){
+                	ind.setGene(1, (byte)127);
+                	ind.setGene(2, (byte)127);
                 }
+                
             }
-            e = new NeighborIterator(countries[ccd]);
-            while (e.hasNext()) {
-                Country test = e.next();
-                if (test.getOwner() != ID && ourConts[test.getContinent()]) {
-                    defenderEnemiesWanted++;
-                }
-            }
-
-            if (attackerEnemiesWanted > defenderEnemiesWanted) {
-                return 0;
-            } else if (defenderEnemiesWanted > attackerEnemiesWanted) {
-                return 1000000;
-            } else if (attackerEnemiesWanted > 0) // then they are tied at above 0
-            {
-                return countries[cca].getArmies() / 2;
-            }
-
-            // So if we get here then they both border zero countries that we
-            // want.
-            // Now if we are here then neither have any enemies.
-            // we won't be able to use them to attack this turn
-            // now just move in xxagentxx
-            debug("Pixie moveArmiesIn not fully imped");
-            return countries[cca].getArmies() / 2;
+            genPop = GeneticAlg2.evolvePopulation(genPop);
         }
-
+        Individual2 temp = genPop.getFittest();
+        Byte byteNumArmies = temp.getGene(2);
         // this should never be reached
-        return 0;
+        System.out.println("Byte is " + byteNumArmies.intValue());
+        return byteNumArmies.intValue();
     }
 
-    /*
+    public int fortifyFitness(int countryID) {
+
+
+            if (countries[countryID].getOwner() == ID && countries[countryID].getMoveableArmies() > 0) {
+                // This means we've found a country of ours that we can move
+                // from if we want to.
+
+                // We determine the best country by counting the enemy
+                // neighbors it has.
+                // The most enemy neighbors is where we move. Also, if there
+                // are 0 enemy
+                // neighbors where the armies are on now, we move to a
+                // random neighbor (in
+                // the hopes we'll find an enemy eventually).
+                // To cycle through the neighbors we could use a
+                // NeighborIterator,
+                // but we can also directly use the country's AdjoingingList
+                // array.
+                // Let's use the array...
+                Country[] neighbors = countries[countryID].getAdjoiningList();
+                int countryCodeBestProspect = -1;
+                int bestEnemyNeighbors = 0;
+                int enemyNeighbors = 0;
+
+                for (int j = 0; j < neighbors.length; j++) {
+                    if (neighbors[j].getOwner() == ID) {
+                        enemyNeighbors = neighbors[j].getNumberEnemyNeighbors();
+
+                        if (enemyNeighbors > bestEnemyNeighbors) {
+                            // Then so far this is the best country to move
+                            // to:
+                            countryCodeBestProspect = neighbors[j].getCode();
+                            bestEnemyNeighbors = enemyNeighbors;
+                        }
+                    }
+                }
+
+            }
+        return 0;
+    }
+            /*
 	 * The fortifyPhase will be based off of the fortify 1st gene in the
 	 * individuals chromosome. The fortifyphase is used for the player to
 	 * fortify themselves and prepare for the next turn.
@@ -629,121 +642,51 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * (non-Javadoc)
 	 * 
 	 * @see com.sillysoft.lux.agent.Pixie#fortifyPhase()
-     */
+             */
     public void fortifyPhase() {
-        byte fortify = (geneticAgent.getPhase("fortify"))[0];
 
-        if (fortify == 0x00) {
-            // Cycle through all the countries and find countries that we could
-            // move from:
-            for (int i = 0; i < board.getNumberOfCountries(); i++) {
-                if (countries[i].getOwner() == ID && countries[i].getMoveableArmies() > 0) {
-                    // This means we've found a country of ours that we can move
-                    // from if we want to.
+        Population2 genPop = new Population2(100, true);
+        Individual2 ind = new Individual2();
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < genPop.size(); i++) {
+                ind = genPop.getIndividual(i);
+                ind.genAgent = this;
+                System.out.println("Individual :" + i + " " + ind);
+                //   placed on countries we already own
 
-                    // We determine the best country by counting the enemy
-                    // neighbors it has.
-                    // The most enemy neighbors is where we move. Also, if there
-                    // are 0 enemy
-                    // neighbors where the armies are on now, we move to a
-                    // random neighbor (in
-                    // the hopes we'll find an enemy eventually).
-                    // To cycle through the neighbors we could use a
-                    // NeighborIterator,
-                    // but we can also directly use the country's AdjoingingList
-                    // array.
-                    // Let's use the array...
-                    Country[] neighbors = countries[i].getAdjoiningList();
-                    int countryCodeBestProspect = -1;
-                    int bestEnemyNeighbors = 0;
-                    int enemyNeighbors = 0;
+                int randCountry = rand.nextInt(ind.genAgent.countries.length);
 
-                    for (int j = 0; j < neighbors.length; j++) {
-                        if (neighbors[j].getOwner() == ID) {
-                            enemyNeighbors = neighbors[j].getNumberEnemyNeighbors();
-
-                            if (enemyNeighbors > bestEnemyNeighbors) {
-                                // Then so far this is the best country to move
-                                // to:
-                                countryCodeBestProspect = neighbors[j].getCode();
-                                bestEnemyNeighbors = enemyNeighbors;
-                            }
-                        }
-                    }
-                    // Now let's calculate the number of enemies of the country
-                    // where the armies
-                    // already are, to see if they should stay here:
-                    enemyNeighbors = countries[i].getNumberEnemyNeighbors();
-
-                    // If there's a better country to move to, move:
-                    if (bestEnemyNeighbors > enemyNeighbors) {
-                        // Then the armies should move:
-                        // So now the country that had the best ratio should be
-                        // moved to:
-                        board.fortifyArmies(countries[i].getMoveableArmies(), i, countryCodeBestProspect);
-                    } // If there are no good places to move to, move to a random
-                    // place:
-                    else if (enemyNeighbors == 0) {
-                        // We choose an int from [0, neighbors.length]:
-                        int randCC = rand.nextInt(neighbors.length);
-                        board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
-                    }
-                }
+                System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
+                int bestCountryToFortify = fortifyFitness(randCountry);
+                Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToFortify));
+                ind.setGene(2, byteScoreForInd);
             }
-        } // If we own two touching continents we equalize the armies between
-        // them.
-        else if (fortify == 0x01) {
-            boolean changed = true;
-            while (changed) {
-                changed = false;
-                for (int i = 0; i < board.getNumberOfCountries(); i++) {
-                    if (countries[i].getOwner() == ID && countries[i].getMoveableArmies() > 0) {
-                        // This means we COULD fortify out of this country if we
-                        // wanted to.
-
-                        // Get country[i]'s neighbors:
-                        Country[] neighbors = countries[i].getAdjoiningList();
-
-                        // Now loop through the neighbors and see if we own any
-                        // of them.
-                        for (int j = 0; j < neighbors.length && countries[i].getMoveableArmies() > 0; j++) {
-                            if (neighbors[j].getOwner() == ID) {
-                                int difference = countries[i].getArmies() - neighbors[j].getArmies();
-                                // So we own a neighbor. Let's see if they have
-                                // more than one army difference:
-                                if (difference > 1) {
-                                    // So we move half the difference:
-                                    board.fortifyArmies(difference / 2, i, neighbors[j].getCode());
-                                    changed = true;
-                                    debug("fort");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else if (fortify == 0x02) {
-            // don't fortify.
-        } // fortifies cluster armies.
-        else if (fortify == 0x03) {
-            if (BoardHelper.playerOwnsAnyPositiveContinent(ID, countries, board)) {
-                int ownCont = getMostValuablePositiveOwnedCont();
-                fortifyCluster(countries[BoardHelper.getCountryInContinent(ownCont, countries)]);
-            } else {
-                Country root = BoardHelper.getPlayersBiggestArmy(ID, countries);
-                fortifyCluster(root);
-            }
-        } // if a continent is owned fortify it, else fortify what you can.
-        else if (fortify == 0x04) {
-            for (int i = 0; i < numContinents; i++) {
-                if (BoardHelper.playerOwnsContinent(ID, i, countries)) {
-                    fortifyContinent(i);
-                } else {
-                    fortifyContinentScraps(i);
-                }
-            }
+            genPop = GeneticAlg2.evolvePopulation(genPop);
         }
-    }
+        Individual2 temp = genPop.getFittest();
+        Byte bestEnemyNeighbors = temp.getGene(3);
+
+        // Now let's calculate the number of enemies of the country
+        // where the armies
+        // already are, to see if they should stay here:
+        int enemyNeighbors = countries[i].getNumberEnemyNeighbors();
+
+        // If there's a better country to move to, move:
+        if (bestEnemyNeighbors > enemyNeighbors) {
+            // Then the armies should move:
+            // So now the country that had the best ratio should be
+            // moved to:
+            board.fortifyArmies(countries[i].getMoveableArmies(), i, countryCodeBestProspect);
+        } // If there are no good places to move to, move to a random
+        // place:
+        else if (enemyNeighbors == 0) {
+            // We choose an int from [0, neighbors.length]:
+            int randCC = rand.nextInt(neighbors.length);
+            board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
+
+        }
+
+    
 
     public String youWon() {
         // For variety we store a bunch of answers and pick one at random to
