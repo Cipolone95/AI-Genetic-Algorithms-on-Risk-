@@ -34,57 +34,25 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 
 	}
 
-	public GeneticAgent(Board myBoard, Country[] myCountries) {
-		board = myBoard;
-		countries = myCountries;
-	}
-
-	/**
-	 * Copy constructor.
-	 */
-	public GeneticAgent(GeneticAgent aGeneticAgent2) {
-		this(aGeneticAgent2.getBoard(), aGeneticAgent2.getCountries());
-		// no defensive copies are created here, since
-		// there are no mutable object fields (String is immutable)
-	}
-
-	/**
-	 * Alternative style for a copy constructor, using a static newInstance
-	 * method.
-	 */
-	public static GeneticAgent newInstance(GeneticAgent aGeneticAgent2) {
-		return new GeneticAgent(aGeneticAgent2.getBoard(), aGeneticAgent2.getCountries());
-	}
-
-	/**
-	 * @return the board that this GeneticAgent is playing on.
-	 */
-	public Board getBoard() {
-		return board;
-	}
-
-	/**
-	 * @return Countries owned by GeneticAgent
-	 */
-	public Country[] getCountries() {
-		return countries;
-	}
-
 	// Save references
+        @Override
 	public void setPrefs(int newID, Board theboard) {
 		ID = newID; // this is how we distinguish what countries we own
 		board = theboard;
 		countries = board.getCountries();
 	}
 
+        @Override
 	public String name() {
 		return "GeneticAgent";
 	}
 
+        @Override
 	public float version() {
 		return 1.0f;
 	}
 
+        @Override
 	public String description() {
 		return "GeneticAgent uses a genetic algorithm for the attack, fortification, and reinforcement phase of risk.";
 	}
@@ -92,6 +60,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	/*
 	 * Picks country for genetic agent.
 	 */
+        @Override
 	public int pickCountry() {
 		// our first choice is the continent with the least # of borders that is
 		// totally empty
@@ -110,10 +79,12 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * 
 	 * @see com.sillysoft.lux.agent.SmartAgentBase#placeInitialArmies(int)
 	 */
+        @Override
 	public void placeInitialArmies(int numberOfArmies) {
 		placeArmies(numberOfArmies);
 	}
 
+        @Override
 	public void cardsPhase(Card[] cards) {
 		cashCardsIfPossible(cards);
 	}
@@ -122,6 +93,8 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * Takes in an individual and calculates its fitness dealing with the number
 	 * of countries this individual owns verses the number of countries the
 	 * enemy owns.
+     * @param ind
+     * @return territoryScore
 	 */
 	public int territoryScore(GeneticAgent ind) {
 		int territoryScore = ind.countries.length;
@@ -152,6 +125,8 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	/**
 	 * Takes in an individual and calculates the fitness dealing with the armies
 	 * owned by this individual verses the armies owned by the enemy.
+     * @param ind
+     * @return Army Vantage Score
 	 */
 	public int armyVantageScore(GeneticAgent ind) {
 		int armyVantageScore = ind.countries.length;
@@ -203,6 +178,8 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	/**
 	 * Deploy "placeArmies" uses the fitness score from ArmyVantage and
 	 * Territory score and sends it back for complete deploy fitness score.
+     * @param ind
+     * @return 
 	 */
 	public int getDeployFitness(GeneticAgent ind) {
 		return armyVantageScore(ind) + territoryScore(ind);
@@ -215,6 +192,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * 
 	 * @see com.sillysoft.lux.agent.Pixie#placeArmies(int)
 	 */
+        @Override
 	public void placeArmies(int numberOfArmies) {
 
 		Population genPop = new Population(25, true);
@@ -285,7 +263,9 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	}
 
 	/**
-	 * used by gene in attackphase.
+	 * used by Lux main engine.
+     * @param careAboutOdds
+     * @return 
 	 */
 	public boolean attackPhase(boolean careAboutOdds) {
 		boolean attacked = false;
@@ -304,6 +284,8 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 
 	/**
 	 * Return fitness for attackphase based on the individual it is sent.
+     * @param ind
+     * @return 
 	 */
 	public int attackFitness(Individual ind) {
 		// iterate through enemy countries next to us...find country with lowest
@@ -334,6 +316,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * generations and picks the most fit individual and attacks accordingly.
 	 * 
 	 */
+        @Override
 	public void attackPhase() {
 
 		int count = 0;
@@ -391,7 +374,9 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	}
 
 	/**
-	 * Used by program to go through with the attack.
+	 * Used by Lux main engine to go through with the attack.
+     * @param us
+     * @param neighbor
 	 */
 	public void startAttack(Country us, Country neighbor) {
 		board.attack(us, neighbor, true);
@@ -400,6 +385,10 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	/**
 	 * Calculates the fitness for moving armies based on the individual it
 	 * receives.
+     * @param numArmies
+     * @param countryId
+     * @param ind
+     * @return 
 	 */
 	public int moveArmiesFitness(int numArmies, int countryId, Individual ind) {
 
@@ -451,6 +440,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	/*
 	 * 2nd part of the attack phase. Moves armies in after attack happens.
 	 */
+        @Override
 	public int moveArmiesIn(int cca, int ccd) {
 
 		Population genPop = new Population(100, true);
@@ -490,6 +480,8 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 
 	/**
 	 * Calculates fortify fitness for specified Country owned by individual.
+     * @param countryID
+     * @return 
 	 */
 	public int fortifyFitness(int countryID) {
 
@@ -537,6 +529,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 	 * individuals chromosome. The fortifyphase is used for the player to
 	 * fortify themselves and prepare for the next turn.
 	 */
+        @Override
 	public void fortifyPhase() {
 
 		Population genPop = new Population(100, true);
@@ -580,6 +573,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 		}
 	}
 
+        @Override
 	public String youWon() {
 		// For variety we store a bunch of answers and pick one at random to
 		// return.
@@ -588,6 +582,7 @@ public class GeneticAgent extends Pixie implements LuxAgent {
 		return answers[rand.nextInt(answers.length)];
 	}
 
+        @Override
 	public String message(String message, Object data) {
 		return null;
 	}
