@@ -439,7 +439,7 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
          */
         boolean attack = true;
         int count = 0;
-        while (count < 10) {
+        while (count < 5) {
             System.out.println("Attacking " + count + " times!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                     + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                     + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

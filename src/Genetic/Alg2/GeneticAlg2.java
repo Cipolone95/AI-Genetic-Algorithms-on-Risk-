@@ -1,6 +1,6 @@
 package Genetic.Alg2;
 
-import Genetic.Alg.Individual;
+import Genetic.Alg2.Individual2;
 
 /**
  * @author Travis Buff, Adam Tucker, Peter Cipolone
