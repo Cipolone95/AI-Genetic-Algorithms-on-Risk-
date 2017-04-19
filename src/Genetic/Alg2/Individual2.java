@@ -27,15 +27,8 @@ public class Individual2 {
 
     // Create a random individual
     public void generateIndividual() {
-    	byte gene;
-        for (int i = 0; i < size(); i++) {
-            byte gene = (byte) Math.round(Math.random());
-            while(gene > 8){
-            	gene = (byte) Math.round(Math.random());
-            }
-
-            genes[i] = gene;
-        }
+            new Random().nextBytes(genes);
+            genAgent = new GeneticAgent2();
     }
 
     public static void main(String[] args){
