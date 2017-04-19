@@ -14,6 +14,7 @@ import java.util.List;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -602,47 +603,56 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
         return byteNumArmies.intValue();
     }
 
-    public int fortifyFitness(int countryID) {
-
-    	int countryCodeBestProspect = -1;
-            if (countries[countryID].getOwner() == ID && countries[countryID].getMoveableArmies() > 0) {
-                // This means we've found a country of ours that we can move
-                // from if we want to.
-
-                // We determine the best country by counting the enemy
-                // neighbors it has.
-                // The most enemy neighbors is where we move. Also, if there
-                // are 0 enemy
-                // neighbors where the armies are on now, we move to a
-                // random neighbor (in
-                // the hopes we'll find an enemy eventually).
-                // To cycle through the neighbors we could use a
-                // NeighborIterator,
-                // but we can also directly use the country's AdjoingingList
-                // array.
-                // Let's use the array...
-                Country[] neighbors = countries[countryID].getAdjoiningList();
-                int bestEnemyNeighbors = 0;
-                int enemyNeighbors = 0;
-
-                for (int j = 0; j < neighbors.length; j++) {
-                    if (neighbors[j].getOwner() == ID) {
-                        enemyNeighbors = neighbors[j].getNumberEnemyNeighbors();
-
-                        if (enemyNeighbors > bestEnemyNeighbors) {
-                            // Then so far this is the best country to move
-                            // to:
-                            countryCodeBestProspect = neighbors[j].getCode();
-                            bestEnemyNeighbors = enemyNeighbors;
-                        }
+       public int fortifyFitness(int countryID, Individual2 ind) {
+        System.out.println("Fortify Fitness!!!!!!!!!!!!!!!!!!!!!!");
+        System.out.println("Country ID Name " + countries[countryID].getName());
+        int countryCodeBestProspect = -1;
+        if (countries[countryID].getMoveableArmies() > 0) {
+            System.out.println("Fortify Fitness getting Fortify Candidates");
+            // This means we've found a country of ours that we can move
+            // from if we want to.
+            //holds the number of enemy neighbors next to the country "us"
+            int numEnemyNeighbors = 0;
+            ArrayList <Integer> countryWithMostNeighborFortifyCanditates = new ArrayList <Integer> ();
+            int count = 0;
+            CountryIterator own = new PlayerIterator(ID, countries);
+            while (own.hasNext()) {
+                Country us = own.next();
+                if (us.getOwner() == ID) {
+                    numEnemyNeighbors = us.getNumberEnemyNeighbors();
+                    // territoryScore will be less then one 
+                    if (numEnemyNeighbors > 2) {
+                        countryWithMostNeighborFortifyCanditates.add(us.getCode());
                     }
                 }
-
+                count++;
             }
-            System.out.println(countryCodeBestProspect);
-       return countryCodeBestProspect;
+            int test = 0;
+            int dest = 0;
+            for (int j = 0; j < countryWithMostNeighborFortifyCanditates.size(); j++) {
+                System.out.println("Getting Path");
+                test = rand.nextInt(countryWithMostNeighborFortifyCanditates.size());
+                System.out.println("Test " + test);
+                dest = countryWithMostNeighborFortifyCanditates.get(test);
+                System.out.println("Dest " + countries[dest].getName());
+                int[] pathTo = BoardHelper.friendlyPathBetweenCountries(countryID, dest, countries);
+                System.out.println("Path to before if " + ind.pathTo);
+                if (BoardHelper.friendlyPathBetweenCountries(countryID, dest, countries) != null) {
+                    System.out.println("Found Path");
+                    ind.to = dest;
+                    ind.pathTo = pathTo;
+                    for (int i=0;i<(pathTo.length-1);i++) {
+                    System.out.println("Path from " + ind.genAgent.countries[pathTo[i]].getName() + " to " + ind.genAgent.countries[pathTo[i+1]].getName());
+                    }
+                    return countries[countryWithMostNeighborFortifyCanditates.get(test)].getNumberEnemyNeighbors();
+                }
+            }
+        }
+        return 0;
     }
-            /*
+
+
+    /*
 	 * The fortifyPhase will be based off of the fortify 1st gene in the
 	 * individuals chromosome. The fortifyphase is used for the player to
 	 * fortify themselves and prepare for the next turn.
@@ -650,54 +660,73 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
 	 * (non-Javadoc)
 	 * 
 	 * @see com.sillysoft.lux.agent.Pixie#fortifyPhase()
-             */
+     */
     public void fortifyPhase() {
-
+        System.out.println("Fortify!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         Population2 genPop = new Population2(100, true);
         Individual2 ind = new Individual2();
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < genPop.size(); i++) {
                 ind = genPop.getIndividual(i);
                 ind.genAgent = this;
-                System.out.println("Individual :" + i + " " + ind);
                 //   placed on countries we already own
 
-                int randCountry = rand.nextInt(ind.genAgent.countries.length);
+                int myArmies = 0;
+                ArrayList <Integer> countryWithAtLeastOneFriendly = new ArrayList<Integer> ();
+                int count = 0;
+                CountryIterator own = new PlayerIterator(ID, countries);
+                while (own.hasNext()) {
+                    Country us = own.next();
+                    if (us.getOwner() == ID) {
+                        // We know us is our country
+                        System.out.println("Us country is " + countries[us.getCode()].getName());
+                        myArmies = us.getMoveableArmies();
+                        // Choose a threshold in this case 4 and continue iterating
+                        if (myArmies > 4) {
+                            // Get our neighbors
+                            Country[] neighbors = us.getAdjoiningList();
+                            System.out.println(Arrays.toString(neighbors));
+                            for (int k = 0; k < neighbors.length; k++) {
+                                // If the below condition is true then there is at least one friendly adjoining country
+                                System.out.println("Friendly minus enemy is " + (us.getNumberNeighbors() - us.getNumberEnemyNeighbors()));
+                                if (us.getNumberNeighbors() - us.getNumberEnemyNeighbors() > 0) {
+                                    // The int array will have countries with avaliable armies and has a path out
+                                    System.out.println("Code " + us.getCode());
+                                    countryWithAtLeastOneFriendly.add(us.getCode());
+                                }
+                            }
 
-                System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
-                int bestCountryToFortify = fortifyFitness(randCountry);
+                        }
+                    }
+                    count++;
+                }
+                System.out.println(Arrays.toString(countryWithAtLeastOneFriendly.toArray()));
+                int test;
+                test = rand.nextInt(countryWithAtLeastOneFriendly.size());
+                ind.from = countryWithAtLeastOneFriendly.get(test);
+                //System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
+                int bestCountryToFortify = fortifyFitness(countryWithAtLeastOneFriendly.get(test), ind);
                 Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToFortify));
                 ind.setGene(3, byteScoreForInd);
             }
             genPop = GeneticAlg2.evolvePopulation(genPop);
         }
         Individual2 temp = genPop.getFittest();
-		Byte bestEnemyNeighbors = temp.getGene(3);
 
-		// Now let's calculate the number of enemies of the country
-		// where the armies
-		// already are, to see if they should stay here:
-			Country[] neighbors = countries[bestEnemyNeighbors].getAdjoiningList();
-			for (int i = 0; i < neighbors.length; i++) {
-				int enemyNeighbors = countries[i].getNumberEnemyNeighbors();
-
-				// If there's a better country to move to, move:
-				if (bestEnemyNeighbors > enemyNeighbors) {
-					// Then the armies should move:
-					// So now the country that had the best ratio should be
-					// moved to:
-					board.fortifyArmies(countries[i].getMoveableArmies(), (int) bestEnemyNeighbors,
-							neighbors[i].getCode());
-				} // If there are no good places to move to, move to a random
-					// place:
-				else if (enemyNeighbors == 0) {
-					// We choose an int from [0, neighbors.length]:
-					int randCC = rand.nextInt(neighbors.length);
-					board.fortifyArmies(countries[i].getMoveableArmies(), i, neighbors[randCC].getCode());
-
-				}
-			}
-	}
+        // Now let's calculate the number of enemies of the country
+        // where the armies
+        // already are, to see if they should stay here:
+        
+        if (temp.pathTo != null) {
+            System.out.println("Path to is not null");
+            for (int i = 0; i < (temp.pathTo.length - 1); i++) {
+                System.out.println(countries[temp.pathTo[i]].getMoveableArmies());
+                System.out.println(countries[ind.pathTo[i]].getName());
+                System.out.println(countries[ind.pathTo[i+1]].getName());
+                board.fortifyArmies(countries[temp.pathTo[i]].getMoveableArmies(), ind.pathTo[i], ind.pathTo[i + 1]);
+            }
+        }
+    }
 
     public String youWon() {
         // For variety we store a bunch of answers and pick one at random to

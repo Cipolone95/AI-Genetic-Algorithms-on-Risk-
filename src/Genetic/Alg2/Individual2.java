@@ -18,6 +18,9 @@ public class Individual2 {
     public GeneticAgent2 genAgent;
     public int wantTo;
 	//Each phases is 3 bytes in this order; Deploy, attack, fortify.
+    public int from;
+    public int to;
+    public int[] pathTo;
     static int ChromosomeLength = 6;
     
     private static byte[] genes = new byte[ChromosomeLength];
