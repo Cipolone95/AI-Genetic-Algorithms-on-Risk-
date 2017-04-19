@@ -537,13 +537,14 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 // if myArmies/numEnemyNeighbors is great than 1 that means my enemies have less armies 
                 // on adjoining countries and my fitness is good
                 int solution = (myArmies - numEnemyArmies);
-                //System.out.println("Solution" + solution);
+                System.out.println("Solution on line 540 in GA2 " + solution);
                 if (solution >= 0) {
                     moveArmiesScore = moveArmiesScore + solution;
                 } else {
                     // Solution is negative so it will subtract even though it is adding
                     moveArmiesScore = moveArmiesScore + solution;
                 }
+                
             }
         }
         System.out.println("Final Army Vantage Score is :" + moveArmiesScore);
@@ -567,9 +568,13 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 ind.genAgent = this;
                 System.out.println("Individual :" + i + " " + ind);
                 //   placed on countries we already own
-                int test;
+                int test; //Do we need this variable? It doesn't do anything 
 
-                int numOfArmiesToPlace = rand.nextInt(ind.genAgent.countries[cca].getArmies());
+                
+                //TESTING THINGS HERE
+                //int numOfArmiesToPlace = rand.nextInt(ind.genAgent.countries[cca].getArmies());
+                int totalArmiesInCountry = ind.genAgent.countries[cca].getArmies();
+                int numOfArmiesToPlace = totalArmiesInCountry - 1; 
 
                 System.out.println("Getting Fitness Score for ind " + i + " and is " + j + " generation");
                 int bestCountryToMoveArmies = moveArmiesFitness(countries[cca].getArmies(), cca, ind);
@@ -577,11 +582,13 @@ public class GeneticAgent2 extends Pixie implements LuxAgent {
                 //if over max then go for move in!
                 try{
                 	Byte byteScoreForInd = Byte.valueOf(Integer.toString(bestCountryToMoveArmies));
+                	Byte byteNumOfArmies = Byte.valueOf(Integer.toString(numOfArmiesToPlace)); //Test work 
                 	ind.setGene(1, byteScoreForInd);
-                	ind.setGene(2, byteScoreForInd);
+                	ind.setGene(2, byteNumOfArmies); //was originally byteScoreForInd
                 }catch(NumberFormatException E){
                 	ind.setGene(1, (byte)127);
                 	ind.setGene(2, (byte)127);
+                	
                 }
                 
             }
