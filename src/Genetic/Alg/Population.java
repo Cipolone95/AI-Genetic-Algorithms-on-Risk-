@@ -1,7 +1,5 @@
 package Genetic.Alg;
 
-import Genetic.Alg.Individual;
-
 /**
  *The population class initializes new sized population based off
  *of randomized individuals. This is the starting point of our
@@ -10,6 +8,8 @@ import Genetic.Alg.Individual;
  *
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
+ * @version 2
+ * @author Adam Tucker, Pete Cipolene and Travis Buff 
  */
 public class Population {
 
