@@ -1,8 +1,5 @@
 package Genetic.Alg;
-import com.sillysoft.lux.Board;
-import com.sillysoft.lux.Country;
 
-import java.util.Arrays;
 import com.sillysoft.lux.agent.GeneticAgent;
 import java.util.Random;
 
@@ -12,6 +9,9 @@ import java.util.Random;
  *
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
+ * 
+ * @version 2
+ * @author Adam Tucker, Pete Cipolene and Travis Buff 
  */
 public class Individual {
      
@@ -28,14 +28,6 @@ public class Individual {
     // Create a random individual
     public void generateIndividual() {
             new Random().nextBytes(genes);
-            genAgent = new GeneticAgent();
-    }
-
-    public static void main(String[] args){
-    	Individual ind = new Individual();
-    	ind.generateIndividual();
-    	String s1 = String.format("%8s", Integer.toBinaryString(genes[0] & 0xFF)).replace(' ', '0');
-    	System.out.println(s1);
     }
     
     /**
@@ -52,22 +44,7 @@ public class Individual {
     public byte[] getChromosome(){
     	return genes;
     }
-    
-    /**
-     * Returns gene phase based of parameter.
-     * @return Returns specific phase requested.
-     */
-    public byte[] getPhase(String phase){
-    	switch(phase){
-    	case "deploy":
-    		return Arrays.copyOfRange(genes,0,1);
-    	case "attack":
-    		return Arrays.copyOfRange(genes, 2, 3);
-    	case "fortify":
-    		return Arrays.copyOfRange(genes, 4, 5);
-    	}
-    	return genes;
-    }
+
 
     /**
      * sets byte as specified index.

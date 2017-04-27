@@ -3,10 +3,12 @@ package Genetic.Alg;
 import Genetic.Alg.Individual;
 
 /**
- * @author Travis Buff, Adam Tucker, Peter Cipolone
+
  * This class will be the basis for the genetic algorithm that our risk "agent" will be using.
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
+ * @version 2
+ * @author Adam Tucker, Pete Cipolene and Travis Buff 
  */
 public class GeneticAlg {
 	
