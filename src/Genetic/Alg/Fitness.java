@@ -1,8 +1,5 @@
 package Genetic.Alg;
 
-import Genetic.Alg.Individual;
-import com.sillysoft.lux.agent.GeneticAgent;
-
 /**
  * Calculates the fitness of a specified individual.
  * This will have to be changed to reflect fitness from risk.
@@ -11,6 +8,8 @@ import com.sillysoft.lux.agent.GeneticAgent;
  * 
  *  *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
+ * @version 2
+ * @author Adam Tucker, Pete Cipolene and Travis Buff 
  */
 public class Fitness {
     static byte[] solution = new byte[64];
@@ -38,11 +37,11 @@ public class Fitness {
     }
 
     // Calculate individuals fitness by comparing it to our candidate solution
-    static int getFitness(GeneticAgent individual) {
+    static int getFitness(Individual individual) {
         int fitness = 0;
         // Loop through our individuals genes and compare them to our cadidates
-        for (int i = 0; i < individual.geneticAgent.size() && i < solution.length; i++) {
-            if (individual.geneticAgent.getGene(i) == solution[i]) {
+        for (int i = 0; i < individual.size() && i < solution.length; i++) {
+            if (individual.getGene(i) == solution[i]) {
                 fitness++;
             }
         }

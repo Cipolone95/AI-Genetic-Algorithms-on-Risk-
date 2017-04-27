@@ -1,6 +1,7 @@
 package Genetic.Alg;
-import java.util.Arrays;
+
 import com.sillysoft.lux.agent.GeneticAgent;
+import java.util.Random;
 
 /**
  * This class is used to make an individual to add to the population
@@ -8,30 +9,26 @@ import com.sillysoft.lux.agent.GeneticAgent;
  *
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
+ * 
+ * @version 2
+ * @author Adam Tucker, Pete Cipolene and Travis Buff 
  */
 public class Individual {
-
+     
+    public GeneticAgent genAgent;
+    public int wantTo;
 	//Each phases is 3 bytes in this order; Deploy, attack, fortify.
-	static int ChromosomeLength = 6;
+    static int ChromosomeLength = 6;
     
-    private byte[] genes = new byte[ChromosomeLength];
+    private static byte[] genes = new byte[ChromosomeLength];
     //relative fitness of this individual
     //we will have to come up with a scale
     private int fitness = 0;
 
     // Create a random individual
     public void generateIndividual() {
-    	byte gene;
-        for (int i = 0; i < size(); i++) {
-        	if(i == 3){
-        		 gene = (byte) (Math.random() * 5);
-        	}else{
-        		 gene = (byte) (Math.random() * 8);
-        	}
-            genes[i] = gene;
-        }
+            new Random().nextBytes(genes);
     }
-
     
     /**
      * returns byte from specified index.
@@ -47,22 +44,7 @@ public class Individual {
     public byte[] getChromosome(){
     	return genes;
     }
-    
-    /**
-     * Returns gene phase based of parameter.
-     * @return Returns specific phase requested.
-     */
-    public byte[] getPhase(String phase){
-    	switch(phase){
-    	case "deploy":
-    		return Arrays.copyOfRange(genes,0,1);
-    	case "attack":
-    		return Arrays.copyOfRange(genes, 2, 3);
-    	case "fortify":
-    		return Arrays.copyOfRange(genes, 4, 5);
-    	}
-    	return genes;
-    }
+
 
     /**
      * sets byte as specified index.
@@ -83,9 +65,9 @@ public class Individual {
     /**
      * returns fitness value of this individual.
      */
-    public int getFitness(GeneticAgent ind) {
+    public int getFitness() {
         if (fitness == 0) {
-            fitness = Fitness.getFitness(ind);
+            fitness = Fitness.getFitness(this);
         }
         return fitness;
     }

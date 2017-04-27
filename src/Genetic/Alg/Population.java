@@ -1,8 +1,5 @@
 package Genetic.Alg;
 
-import Genetic.Alg.Individual;
-import com.sillysoft.lux.agent.GeneticAgent;
-
 /**
  *The population class initializes new sized population based off
  *of randomized individuals. This is the starting point of our
@@ -11,10 +8,12 @@ import com.sillysoft.lux.agent.GeneticAgent;
  *
  * *Code is based off of code from the following website
  * http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3
+ * @version 2
+ * @author Adam Tucker, Pete Cipolene and Travis Buff 
  */
 public class Population {
 
-    GeneticAgent[] individuals;
+    Individual[] individuals;
 
     /*
      * Constructor
@@ -22,12 +21,12 @@ public class Population {
      * If initialized allows changing of population size.
      */
     public Population(int populationSize, boolean initialise) {
-        individuals = new GeneticAgent[populationSize];
+        individuals = new Individual[populationSize];
         if(initialise){
             // Loop and create individuals
             for (int i = 0; i < size(); i++) {
-                GeneticAgent newIndividual = new GeneticAgent();
-                newIndividual.geneticAgent.generateIndividual();
+                Individual newIndividual = new Individual();
+                newIndividual.generateIndividual();
                 saveIndividual(i, newIndividual);
             }
         }
@@ -38,18 +37,18 @@ public class Population {
      * @param index of wanted individual
      * @return individual at this index
      */
-    public GeneticAgent getIndividual(int index) {
+    public Individual getIndividual(int index) {
         return individuals[index];
     }
 
     /**
      * @return individual that is the fittest in this population
      */
-    public GeneticAgent getFittest() {
-        GeneticAgent fittest = individuals[0];
+    public Individual getFittest() {
+        Individual fittest = individuals[0];
         // Loop through individuals to find fittest
         for (int i = 0; i < size(); i++) {
-            if (fittest.geneticAgent.getFitness(fittest) <= getIndividual(i).geneticAgent.getFitness(fittest)) {
+            if (fittest.getFitness() <= getIndividual(i).getFitness()) {
                 fittest = getIndividual(i);
             }
         }
@@ -68,7 +67,7 @@ public class Population {
     /**
      * Saves specified individual to specified index in individuals.
      */
-    public void saveIndividual(int index, GeneticAgent indiv) {
+    public void saveIndividual(int index, Individual indiv) {
         individuals[index] = indiv;
     }
 }
